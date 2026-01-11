@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Révision des verbes allemands</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#f4f4f4;
+  padding:20px;
+}
+.card {
+  background:#fff;
+  padding:20px;
+  max-width:600px;
+  margin:auto;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+h1 { text-align:center; }
+label { display:block; margin-top:10px; }
+input { width:100%; padding:8px; margin-top:4px; }
+button { margin-top:15px; padding:10px; width:100%; font-size:16px; }
+.hidden { display:none; }
+.result { margin-top:15px; }
+</style>
+</head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<body>
+
+<div class="card">
+<h1>📘 Verbes irréguliers allemands</h1>
+
+<div id="menu">
+<!--  <button onclick="start('random')">🎲 Apprentissage aléatoire</button> -->
+  <button onclick="start('cible')">🎯 Révision ciblée</button>
+  <button onclick="ouvrirVerbesPerso()">🧩 Verbes personnalisés</button>
+  <button onclick="afficherStats()">📊 Statistiques</button>
+<button id="btnActiverNotif" onclick="activerNotifications()">🔔 Activer les notifications</button>
+<button id="btnDesactiverNotif" onclick="desactiverNotifications()" class="hidden">🔕 Désactiver les notifications</button>
+</div>
+
+<audio id="youpiAudio" src="youpi.mp3"></audio>
+<audio id="eOhAudio" src="e_oh.mp3"></audio>
+
+<div id="quiz" class="hidden">
+
+  <p><strong>Infinitif :</strong> <span id="inf"></span></p>
+  <p><strong>Sens :</strong> <span id="sens"></span></p>
+
+  <label id="extraLabel" class="hidden">
+    Ta réponse
+    <input id="extraInput">
+  </label>
+
+  <label id="presLabel">Présent
+    <input id="pres">
+  </label>
+
+  <label id="pretLabel">Prétérit
+    <input id="pret">
+  </label>
+
+  <label id="parfLabel">Parfait
+    <input id="parf">
+  </label>
+
+  <button onclick="check()">Valider</button>
+
+  <div class="result" id="result"></div>
+  <p id="messageEncouragement" class="hidden">Réessaye encore 💪</p>
+  <button onclick="next()" id="nextBtn" class="hidden">➡️ Verbe suivant</button>
+
+</div>
+
+<div id="verbesPerso" class="hidden">
+  <h2>➕ Ajouter un verbe personnalisé</h2>
+
+  <label>Infinitif
+    <input id="p_inf">
+  </label>
+
+  <label>Présent
+    <input id="p_pres">
+  </label>
+
+  <label>Prétérit
+    <input id="p_pret">
+  </label>
+
+  <label>Parfait
+    <input id="p_parf">
+  </label>
+
+  <label>Sens (séparés par ; )
+    <input id="p_sens">
+  </label>
+
+  <button onclick="ajouterVerbePerso()">💾 Ajouter</button>
+  <button onclick="reviserVerbesPerso()">🎯 Réviser ces verbes</button>
+
+  <div id="listeVerbesPerso"></div>
+</div>
+
+
+<div id="statsPanel" class="hidden">
+  <h2>📊 Statistiques</h2>
+  <div id="statsContent"></div>
+  <p>
+  Notifications :
+  <strong id="etatNotif"></strong>
+</p>
+<button onclick="exporterDonnees()">💾 Exporter mes statistiques</button>
+<button onclick="importerDonnees()">📂 Importer des statistiques</button>
+<button onclick="exporterPDF()">📄 Générer un PDF de mes statistiques</button>
+
+<input type="file" id="importFile" accept=".json" class="hidden">
+
+  <button onclick="fermerStats()">⬅ Retour</button>
+</div>
+</div>
+
+<script>
+// ================== PARAMÈTRES ==================
+const TAILLE_PALIER = 5;
+const SEUIL_MAITRISE = 3;
+const TAUX_REVISION = 0.2;
+const QUESTION_TYPES = ["classique", "sens_inf", "inf_sens"];
+
+// ================== VERBES ==================
+const verbes = [
+  { inf: "beginnen", pres: "er beginnt", pret: "er begann", parf: "er hat begonnen", sens: "commencer" },
+  { inf: "bleiben", pres: "er bleibt", pret: "er blieb", parf: "er ist geblieben", sens: "rester" },
+  { inf: "bringen", pres: "er bringt", pret: "er brachte", parf: "er hat gebracht", sens: "apporter" },
+  { inf: "denken", pres: "er denkt", pret: "er dachte", parf: "er hat gedacht", sens: "penser" },
+  { inf: "essen", pres: "er isst", pret: "er aß", parf: "er hat gegessen", sens: "manger" },
+  { inf: "an/bieten", pres: "er bietet an", pret: "er bot an", parf: "er hat angeboten", sens: "offrir, proposer" },
+  { inf: "aus/sehen", pres: "er sieht aus", pret: "er sah aus", parf: "er hat ausgesehen", sens: "avoir l'air" },
+  { inf: "an/ziehen", pres: "er zieht an", pret: "er zog an", parf: "er hat angezogen", sens: "mettre (un vêtement)" },
+  { inf: "an/fangen", pres: "er fängt an", pret: "er fing an", parf: "er hat angefangen", sens: "commencer" },
+  { inf: "an/kommen", pres: "er kommt an", pret: "er kam an", parf: "er ist angekommen", sens: "arriver" },
+  { inf: "aus/geben", pres: "er gibt aus", pret: "er gab aus", parf: "er hat ausgegeben", sens: "dépenser" },
+  { inf: "begreifen", pres: "er begreift", pret: "er begriff", parf: "er hat begriffen", sens: "comprendre" },
+  { inf: "beschließen", pres: "er beschließt", pret: "er beschloss", parf: "er hat beschlossen", sens: "décider" },
+  { inf: "beschreiben", pres: "er beschreibt", pret: "er beschrieb", parf: "er hat beschrieben", sens: "décrire" },
+  { inf: "brechen", pres: "er bricht", pret: "er brach", parf: "er hat gebrochen", sens: "casser" },
+  { inf: "ein/laden", pres: "er lädt ein", pret: "er lud ein", parf: "er hat eingeladen", sens: "inviter" },
+  { inf: "ein/schlafen", pres: "er schläft ein", pret: "er schlief ein", parf: "er ist eingeschlafen", sens: "s'endormir" },
+  { inf: "empfangen", pres: "er empfängt", pret: "er empfing", parf: "er hat empfangen", sens: "recevoir" },
+  { inf: "empfehlen", pres: "er empfiehlt", pret: "er empfahl", parf: "er hat empfohlen", sens: "recommander" },
+  { inf: "erhalten", pres: "er erhält", pret: "er erhielt", parf: "er hat erhalten", sens: "obtenir" },
+  { inf: "ertragen", pres: "er erträgt", pret: "er ertrug", parf: "er hat ertragen", sens: "supporter" },
+  { inf: "fahren", pres: "er fährt", pret: "er fuhr", parf: "er ist gefahren", sens: "aller (en véhicule)" },
+  { inf: "finden", pres: "er findet", pret: "er fand", parf: "er hat gefunden", sens: "trouver" },
+  { inf: "geben", pres: "er gibt", pret: "er gab", parf: "er hat gegeben", sens: "donner" },
+  { inf: "gehen", pres: "er geht", pret: "er ging", parf: "er ist gegangen", sens: "aller" },
+  { inf: "helfen", pres: "er hilft", pret: "er half", parf: "er hat geholfen", sens: "aider" },
+  { inf: "kommen", pres: "er kommt", pret: "er kam", parf: "er ist gekommen", sens: "venir" },
+  { inf: "laufen", pres: "er läuft", pret: "er lief", parf: "er ist gelaufen", sens: "courir" },
+  { inf: "lesen", pres: "er liest", pret: "er las", parf: "er hat gelesen", sens: "lire" },
+  { inf: "nehmen", pres: "er nimmt", pret: "er nahm", parf: "er hat genommen", sens: "prendre" },
+  { inf: "rufen", pres: "er ruft", pret: "er rief", parf: "er hat gerufen", sens: "appeler" },
+  { inf: "schlafen", pres: "er schläft", pret: "er schlief", parf: "er hat geschlafen", sens: "dormir" },
+  { inf: "sehen", pres: "er sieht", pret: "er sah", parf: "er hat gesehen", sens: "voir" },
+  { inf: "sprechen", pres: "er spricht", pret: "er sprach", parf: "er hat gesprochen", sens: "parler" },
+  { inf: "stehen", pres: "er steht", pret: "er stand", parf: "er hat gestanden", sens: "être debout" },
+  { inf: "tragen", pres: "er trägt", pret: "er trug", parf: "er hat getragen", sens: "porter" },
+  { inf: "treffen", pres: "er trifft", pret: "er traf", parf: "er hat getroffen", sens: "rencontrer" },
+  { inf: "werden", pres: "er wird", pret: "er wurde", parf: "er ist geworden", sens: "devenir" },
+  { inf: "werfen", pres: "er wirft", pret: "er warf", parf: "er hat geworfen", sens: "jeter" },
+  { inf: "ziehen", pres: "er zieht", pret: "er zog", parf: "er ist gezogen", sens: "tirer / déménager" },
+  { inf: "backen", pres: "er bäckt", pret: "er backte", parf: "er hat gebacken", sens: "cuire au four" },
+  { inf: "befehlen", pres: "er befiehlt", pret: "er befahl", parf: "er hat befohlen", sens: "ordonner" },
+  { inf: "biegen", pres: "er biegt", pret: "er bog", parf: "er hat gebogen", sens: "plier" },
+  { inf: "bieten", pres: "er bietet", pret: "er bot", parf: "er hat geboten", sens: "offrir" },
+  { inf: "binden", pres: "er bindet", pret: "er band", parf: "er hat gebunden", sens: "attacher" },
+  { inf: "bitten", pres: "er bittet", pret: "er bat", parf: "er hat gebeten", sens: "demander" },
+  { inf: "blasen", pres: "er bläst", pret: "er blies", parf: "er hat geblasen", sens: "souffler" },
+  { inf: "fallen", pres: "er fällt", pret: "er fiel", parf: "er ist gefallen", sens: "tomber" },
+  { inf: "fangen", pres: "er fängt", pret: "er fing", parf: "er hat gefangen", sens: "attraper" },
+  { inf: "fliegen", pres: "er fliegt", pret: "er flog", parf: "er ist geflogen", sens: "voler" },
+  { inf: "fließen", pres: "er fließt", pret: "er floss", parf: "er ist geflossen", sens: "couler" },
+  { inf: "frieren", pres: "er friert", pret: "er fror", parf: "er hat gefroren", sens: "avoir froid / geler" },
+  { inf: "graben", pres: "er gräbt", pret: "er grub", parf: "er hat gegraben", sens: "creuser" },
+  { inf: "halten", pres: "er hält", pret: "er hielt", parf: "er hat gehalten", sens: "tenir" },
+  { inf: "hängen", pres: "er hängt", pret: "er hing", parf: "er hat gehangen", sens: "être suspendu" },
+  { inf: "heißen", pres: "er heißt", pret: "er hieß", parf: "er hat geheißen", sens: "s'appeler" },
+  { inf: "kneifen", pres: "er kneift", pret: "er kniff", parf: "er hat gekniffen", sens: "pincer" },
+  { inf: "laden", pres: "er lädt", pret: "er lud", parf: "er hat geladen", sens: "charger" },
+  { inf: "liegen", pres: "er liegt", pret: "er lag", parf: "er hat gelegen", sens: "être couché" },
+  { inf: "lügen", pres: "er lügt", pret: "er log", parf: "er hat gelogen", sens: "mentir" },
+  { inf: "messen", pres: "er misst", pret: "er maß", parf: "er hat gemessen", sens: "mesurer" },
+  { inf: "pfeifen", pres: "er pfeift", pret: "er pfiff", parf: "er hat gepfiffen", sens: "siffler" },
+  { inf: "raten", pres: "er rät", pret: "er riet", parf: "er hat geraten", sens: "conseiller / deviner" },
+  { inf: "reiten", pres: "er reitet", pret: "er ritt", parf: "er ist geritten", sens: "monter à cheval" },
+  { inf: "scheinen", pres: "er scheint", pret: "er schien", parf: "er hat geschienen", sens: "briller / sembler" },
+  { inf: "schlagen", pres: "er schlägt", pret: "er schlug", parf: "er hat geschlagen", sens: "frapper" },
+  { inf: "schneiden", pres: "er schneidet", pret: "er schnitt", parf: "er hat geschnitten", sens: "couper" },
+  { inf: "schreien", pres: "er schreit", pret: "er schrie", parf: "er hat geschrien", sens: "crier" },
+  { inf: "schweigen", pres: "er schweigt", pret: "er schwieg", parf: "er hat geschwiegen", sens: "se taire" },
+  { inf: "steigen", pres: "er steigt", pret: "er stieg", parf: "er ist gestiegen", sens: "monter" }
+];
+
+// ============VERBES PERSONNALISéS =================//
+    let verbesPersonnalises =
+        JSON.parse(localStorage.getItem("verbesPerso")) || [];
+
+  let verbesDeBase = [...verbes];
+  let verbesActifs = verbesDeBase;
+// ================== NORMALISATION ==================
+function normaliser(texte) {
+  return texte.trim().toLowerCase();
+}
+
+// ================== VARIABLES ==================
+let mode = "random";
+let current = null;
+let questionType = "classique";
+
+const youpiAudio = document.getElementById("youpiAudio");
+const eOhAudio = document.getElementById("eOhAudio");
+
+let stats = JSON.parse(localStorage.getItem("stats")) || {};
+verbes.forEach(v => {
+  if (!stats[v.inf]) stats[v.inf] = stats[inf] = {
+  propositions: 0,
+  erreurs: 0,
+  maitrise: 0,
+  nextReview: null,   // timestamp
+  interval: 0         // index d’intervalle
+};
+;
+});
+
+const TAILLE_GROUPE = 5;
+
+function getGroupIndex(index) {
+  return Math.floor(index / TAILLE_GROUPE);
+}
+
+function groupesDebloques() {
+  let groupes = [];
+
+  for (let i = 0; i < verbes.length; i += TAILLE_GROUPE) {
+    const groupe = verbes.slice(i, i + TAILLE_GROUPE);
+
+    const maitriseOK = groupe.every(v => stats[v.inf]?.maitrise >= 1);
+
+    groupes.push({
+      debut: i + 1,
+      fin: Math.min(i + TAILLE_GROUPE, verbes.length),
+      debloque: maitriseOK
+    });
+
+    if (!maitriseOK) break;
+  }
+
+  return groupes;
+}
+
+// =================Notifications ========
+
+function verifierRevisions() {
+  if (localStorage.getItem("notificationsActivees") !== "true") return;
+
+  const today = new Date().toISOString().slice(0,10);
+  const derniereNotif = localStorage.getItem("derniereNotification");
+
+  if (derniereNotif === today) return;
+
+  const aReviser = verbesEnAttenteDeRevision();
+
+  if (aReviser.length > 0) {
+    envoyerNotification(aReviser.length);
+    localStorage.setItem("derniereNotification", today);
+  }
+}
+
+function activerNotifications() {
+  if (!("Notification" in window)) {
+    alert("Les notifications ne sont pas supportées par ce navigateur.");
+    return;
+  }
+
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      localStorage.setItem("notificationsActivees", "true");
+      alert("🔔 Notifications activées !");
+      verifierRevisions(); // test immédiat
+    } else {
+      alert("Notifications refusées.");
+    }
+  });
+}
+
+function verbesEnAttenteDeRevision() {
+  const maintenant = Date.now();
+  return verbes.filter(v => stats[v.inf]?.nextReview <= maintenant);
+}
+
+
+
+function envoyerNotification(nb) {
+  if (Notification.permission !== "granted") return;
+
+  new Notification("📘 Révision allemande", {
+    body: `Tu as ${nb} verbe(s) à réviser aujourd’hui 💪`,
+  });
+}
+
+verifierRevisions();
+setInterval(verifierRevisions, 60 * 60 * 1000); // toutes les heures
+
+
+function desactiverNotifications() {
+  localStorage.setItem("notificationsActivees", "false");
+  localStorage.removeItem("derniereNotification");
+
+  alert("🔕 Notifications désactivées");
+
+  document.getElementById("btnActiverNotif").classList.remove("hidden");
+  document.getElementById("btnDesactiverNotif").classList.add("hidden");
+}
+
+function majBoutonsNotifications() {
+  const actives = localStorage.getItem("notificationsActivees") === "true";
+
+  document.getElementById("btnActiverNotif").classList.toggle("hidden", actives);
+  document.getElementById("btnDesactiverNotif").classList.toggle("hidden", !actives);
+}
+
+majBoutonsNotifications();
+
+document.getElementById("etatNotif").textContent =
+  localStorage.getItem("notificationsActivees") === "true"
+  ? "🔔 Activées"
+  : "🔕 Désactivées";
+
+
+// ================== PALIERS ==================
+function getNombrePaliersDebloques() {
+  let paliers = 1;
+  while (true) {
+    const debut = (paliers - 1) * TAILLE_PALIER;
+    const groupe = verbes.slice(debut, debut + TAILLE_PALIER);
+    if (groupe.length < TAILLE_PALIER) break;
+    if (groupe.every(v => stats[v.inf].maitrise >= SEUIL_MAITRISE)) paliers++;
+    else break;
+  }
+  return paliers;
+}
+
+function verbesDisponibles() {
+  const groupes = groupesDebloques();
+  let maxIndex = groupes.length * TAILLE_GROUPE;
+
+  // Réactivation de verbes anciens (spaced repetition)
+  let anciens = verbesActifs.slice(0, maxIndex - TAILLE_GROUPE);
+  let nouveaux = verbesActifs.slice(0, maxIndex);
+
+  return Math.random() < 0.3 && anciens.length ? anciens : nouveaux;
+}
+
+function choisirVerbe() {
+  const liste = verbesDisponibles();
+
+  if (mode === "random") {
+    return liste[Math.floor(Math.random() * liste.length)];
+  }
+
+  let cibles = liste.filter(v =>
+    stats[v.inf].erreurs > stats[v.inf].maitrise ||
+    stats[v.inf].maitrise < 4
+  );
+
+  return (cibles.length ? cibles : liste)[Math.floor(Math.random() * liste.length)];
+}
+
+function afficherStats() {
+  document.getElementById("menu").classList.add("hidden");
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("statsPanel").classList.remove("hidden");
+
+  let total = 0, erreurs = 0, maitrise = 0;
+
+  Object.values(stats).forEach(s => {
+    total += s.propositions;
+    erreurs += s.erreurs;
+    maitrise += s.maitrise;
+  });
+
+  const groupes = groupesDebloques();
+
+  let html = `
+    <p>📘 Réponses totales : <strong>${total}</strong></p>
+    <p>❌ Erreurs : <strong>${erreurs}</strong></p>
+    <p>⭐ Maîtrises : <strong>${maitrise}</strong></p>
+    <hr>
+    <h3>📦 Groupes débloqués</h3>
+  `;
+
+  groupes.forEach((g, i) => {
+    html += `
+      <p>
+        Groupe ${i + 1} (verbes ${g.debut}–${g.fin}) :
+        ${g.debloque ? "✅ Débloqué" : "🔒 Verrouillé"}
+      </p>
+    `;
+  });
+
+  document.getElementById("statsContent").innerHTML = html;
+}
+
+function fermerStats() {
+  document.getElementById("statsPanel").classList.add("hidden");
+  document.getElementById("menu").classList.remove("hidden");
+}
+
+
+// ================== QUIZ ==================
+function start(m) {
+  mode = m;
+  menu.classList.add("hidden");
+  quiz.classList.remove("hidden");
+  next();
+}
+
+function next() {
+  current = choisirVerbe();
+  stats[current.inf].propositions++;
+
+  questionType = QUESTION_TYPES[Math.floor(Math.random()*QUESTION_TYPES.length)];
+
+  inf.textContent = "";
+  sens.textContent = "";
+  extraInput.value = "";
+  pres.value = pret.value = parf.value = "";
+
+  extraLabel.classList.add("hidden");
+  presLabel.classList.remove("hidden");
+  pretLabel.classList.remove("hidden");
+  parfLabel.classList.remove("hidden");
+
+  if (questionType === "classique") {
+    inf.textContent = current.inf;
+    sens.textContent = current.sens;
+  }
+
+  if (questionType === "sens_inf") {
+    sens.textContent = current.sens;
+    extraLabel.classList.remove("hidden");
+    presLabel.classList.add("hidden");
+    pretLabel.classList.add("hidden");
+    parfLabel.classList.add("hidden");
+  }
+
+  if (questionType === "inf_sens") {
+    inf.textContent = current.inf;
+    extraLabel.classList.remove("hidden");
+    presLabel.classList.add("hidden");
+    pretLabel.classList.add("hidden");
+    parfLabel.classList.add("hidden");
+  }
+
+  result.innerHTML = "";
+  nextBtn.classList.add("hidden");
+  messageEncouragement.classList.add("hidden");
+}
+
+function normaliserAvancee(texte) {
+  return texte
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function reponseCorrecte(userInput, solutions) {
+  const user = normaliserAvancee(userInput);
+  return solutions
+    .split(/[,/]/)
+    .map(s => normaliserAvancee(s))
+    .some(s => s === user);
+}
+
+function comparaisonVisuelle(userInput, solution) {
+  let html = "";
+  const max = Math.max(userInput.length, solution.length);
+
+  for (let i = 0; i < max; i++) {
+    const u = userInput[i] || "";
+    const s = solution[i] || "";
+
+    if (u === s) {
+      html += `<span style="color:green">${u}</span>`;
+    } else {
+      html += `<span style="color:red">${u || "␣"}</span>`;
+    }
+  }
+  return html;
+}
+
+
+
+function check() {
+  let score = 0;
+  let feedback = "";
+
+  if (questionType === "classique") {
+
+    if (normaliserAvancee(pres.value) === normaliserAvancee(current.pres)) {
+      score++;
+    } else {
+      feedback += `<br>Présent : ${comparaisonVisuelle(pres.value, current.pres)}`;
+    }
+
+    if (normaliserAvancee(pret.value) === normaliserAvancee(current.pret)) {
+      score++;
+    } else {
+      feedback += `<br>Prétérit : ${comparaisonVisuelle(pret.value, current.pret)}`;
+    }
+
+    if (normaliserAvancee(parf.value) === normaliserAvancee(current.parf)) {
+      score++;
+    } else {
+      feedback += `<br>Parfait : ${comparaisonVisuelle(parf.value, current.parf)}`;
+    }
+  }
+
+  if (questionType === "sens_inf") {
+    if (reponseCorrecte(extraInput.value, current.inf)) score = 3;
+    else feedback = comparaisonVisuelle(extraInput.value, current.inf);
+  }
+
+  if (questionType === "inf_sens") {
+    if (reponseCorrecte(extraInput.value, current.sens)) score = 3;
+    else feedback = comparaisonVisuelle(extraInput.value, current.sens.split(/[,/]/)[0]);
+  }
+
+  if (score === 3) {
+    stats[current.inf].maitrise++;
+    youpiAudio.play();
+  } else {
+    stats[current.inf].erreurs++;
+    eOhAudio.play();
+  }
+
+  localStorage.setItem("stats", JSON.stringify(stats));
+
+  result.innerHTML = `
+    <strong>Correction :</strong><br>
+    Infinitif : ${current.inf}<br>
+    Sens : ${current.sens}<br>
+    Présent : ${current.pres}<br>
+    Prétérit : ${current.pret}<br>
+    Parfait : ${current.parf}<br>
+    🎯 Score : ${score}/3
+    ${feedback ? "<hr>🛠 Détails :<br>" + feedback : ""}
+  `;
+
+  if (score === 3) nextBtn.classList.remove("hidden");
+  else messageEncouragement.classList.remove("hidden");
+}
+
+
+// IMPORTER EXPORTER STATISTIQUE
+
+
+
+function exporterDonnees() {
+  const data = {
+    stats: JSON.parse(localStorage.getItem("stats")) || {},
+    progression: JSON.parse(localStorage.getItem("progression")) || {},
+    streak: JSON.parse(localStorage.getItem("streak")) || {},
+    notificationsActivees: localStorage.getItem("notificationsActivees"),
+    derniereNotification: localStorage.getItem("derniereNotification"),
+    dateExport: new Date().toISOString()
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "verbes_allemands_stats.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importerDonnees() {
+  document.getElementById("importFile").click();
+}
+
+document.getElementById("importFile").addEventListener("change", function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      if (!data.stats) throw "Fichier invalide";
+
+      localStorage.setItem("stats", JSON.stringify(data.stats));
+      localStorage.setItem("progression", JSON.stringify(data.progression || {}));
+      localStorage.setItem("streak", JSON.stringify(data.streak || {count:0}));
+      localStorage.setItem("notificationsActivees", data.notificationsActivees || "false");
+
+      if (data.derniereNotification) {
+        localStorage.setItem("derniereNotification", data.derniereNotification);
+      }
+
+      alert("✅ Statistiques importées avec succès !");
+      location.reload();
+
+    } catch (err) {
+      alert("❌ Fichier invalide ou corrompu");
+    }
+  };
+
+  reader.readAsText(file);
+});
+
+
+
+
+//======= PDF EXPORTER ======
+
+
+function exporterPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const stats = JSON.parse(localStorage.getItem("stats")) || {};
+  const streak = JSON.parse(localStorage.getItem("streak")) || { count: 0 };
+
+  let y = 15;
+
+  // 📘 Titre
+  doc.setFontSize(18);
+  doc.text("Révision des verbes allemands", 10, y);
+  y += 10;
+
+  doc.setFontSize(10);
+  doc.text(`Exporté le : ${new Date().toLocaleDateString()}`, 10, y);
+  y += 10;
+
+  // 🔥 Streak
+  doc.setFontSize(12);
+  doc.text(`🔥 Streak actuel : ${streak.count || 0} jour(s)`, 10, y);
+  y += 10;
+
+  // 📊 Stats globales
+  let total = 0, mait = 0, erreurs = 0;
+
+  Object.values(stats).forEach(v => {
+    total += v.propositions || 0;
+    mait += v.maitrise || 0;
+    erreurs += v.erreurs || 0;
+  });
+
+  doc.text(`📊 Statistiques globales`, 10, y);
+  y += 6;
+  doc.text(`• Tentatives : ${total}`, 12, y); y += 5;
+  doc.text(`• Maîtrises : ${mait}`, 12, y); y += 5;
+  doc.text(`• Erreurs : ${erreurs}`, 12, y); y += 10;
+
+  // 🔓 Groupes débloqués
+  const groupesDebloques = Math.floor(
+    Object.values(stats).filter(v => v.maitrise >= 3).length / 5
+  );
+
+  doc.text(`🔓 Groupes débloqués : ${groupesDebloques}`, 10, y);
+  y += 10;
+
+  // 🧠 Verbes maîtrisés
+  doc.text("🧠 Verbes maîtrisés :", 10, y);
+  y += 6;
+
+  Object.entries(stats)
+    .filter(([_, v]) => v.maitrise >= 3)
+    .slice(0, 15)
+    .forEach(([inf]) => {
+      doc.text(`• ${inf}`, 12, y);
+      y += 5;
+    });
+
+  y += 5;
+
+  // ⚠️ Verbes à revoir
+  doc.text("⚠️ Verbes à revoir :", 10, y);
+  y += 6;
+
+  Object.entries(stats)
+    .filter(([_, v]) => v.erreurs > v.maitrise)
+    .slice(0, 10)
+    .forEach(([inf]) => {
+      doc.text(`• ${inf}`, 12, y);
+      y += 5;
+    });
+
+  // 📄 Téléchargement
+  doc.save("verbes_allemands_progression.pdf");
+}
+
+// =========  OUVRIR VERBES PERSO ===========
+
+function ouvrirVerbesPerso() {
+  document.getElementById("menu").classList.add("hidden");
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("verbesPerso").classList.remove("hidden");
+  afficherVerbesPerso();
+}
+
+function ajouterVerbePerso() {
+  const v = {
+    inf: p_inf.value.trim(),
+    pres: p_pres.value.trim(),
+    pret: p_pret.value.trim(),
+    parf: p_parf.value.trim(),
+    sens: p_sens.value.trim()
+  };
+
+  if (!v.inf || !v.pres || !v.pret || !v.parf || !v.sens) {
+    alert("Tous les champs sont obligatoires");
+    return;
+  }
+
+  verbesPersonnalises.push(v);
+  localStorage.setItem("verbesPerso", JSON.stringify(verbesPersonnalises));
+
+  // stats initiales
+  stats[v.inf] = { propositions: 0, erreurs: 0, maitrise: 0 };
+  localStorage.setItem("stats", JSON.stringify(stats));
+
+  ["p_inf","p_pres","p_pret","p_parf","p_sens"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+
+  afficherVerbesPerso();
+}
+function afficherVerbesPerso() {
+  const div = document.getElementById("listeVerbesPerso");
+  div.innerHTML = "<h3>📚 Mes verbes</h3>";
+
+  verbesPersonnalises.forEach((v, i) => {
+    div.innerHTML += `
+      <div>
+        ${v.inf} – ${v.sens}
+        <button onclick="supprimerVerbePerso(${i})">❌</button>
+      </div>
+    `;
+  });
+}
+
+function supprimerVerbePerso(index) {
+  const inf = verbesPersonnalises[index].inf;
+  verbesPersonnalises.splice(index, 1);
+
+  delete stats[inf];
+
+  localStorage.setItem("verbesPerso", JSON.stringify(verbesPersonnalises));
+  localStorage.setItem("stats", JSON.stringify(stats));
+  afficherVerbesPerso();
+}
+
+function reviserVerbesPerso() {
+  if (verbesPersonnalises.length === 0) {
+    alert("Aucun verbe personnalisé");
+    return;
+  }
+
+  verbesActifs = verbesPersonnalises;
+  mode = "random";
+
+  document.getElementById("verbesPerso").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+
+  next();
+}
+
+
+</script>
+
+</body>
+</html>
+

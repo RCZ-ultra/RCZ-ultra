@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Révision des verbes irréguliers anglais</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#f4f4f4;
+  padding:20px;
+}
+.card {
+  background:#fff;
+  padding:20px;
+  max-width:700px;
+  margin:auto;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+h1,h2,h3 { text-align:center; }
+label { display:block; margin-top:10px; }
+input { width:100%; padding:8px; margin-top:4px; }
+button { margin-top:15px; padding:10px; width:100%; font-size:16px; }
+.hidden { display:none; }
+.result { margin-top:15px; }
+.good { color:green; }
+.bad { color:red; }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h1>📘 Verbes irréguliers anglais</h1>
+
+<div id="menu">
+  <button onclick="start()">🎯 Révision ciblée</button>
+  <button onclick="afficherStats()">📊 Statistiques</button>
+  <button id="btnActiverNotif" onclick="activerNotifications()">🔔 Activer les notifications</button>
+  <button id="btnDesactiverNotif" onclick="desactiverNotifications()" class="hidden">🔕 Désactiver les notifications</button>
+</div>
+
+<audio id="youpiAudio" src="youpi.mp3"></audio>
+<audio id="eOhAudio" src="e_oh.mp3"></audio>
+
+<div id="quiz" class="hidden">
+  <p><strong>Infinitif :</strong> <span id="inf"></span></p>
+  <p><strong>Sens :</strong> <span id="sens"></span></p>
+
+  <label id="extraLabel" class="hidden">
+    Ta réponse
+    <input id="extraInput">
+  </label>
+
+  <label id="presLabel">Base verbale
+    <input id="pres">
+  </label>
+
+  <label id="pretLabel">Prétérit
+    <input id="pret">
+  </label>
+
+  <label id="parfLabel">Participe passé
+    <input id="parf">
+  </label>
+
+  <button onclick="check()">Valider</button>
+
+  <div id="result" class="result"></div>
+  <p id="messageEncouragement" class="hidden">Réessaie encore 💪</p>
+  <button id="nextBtn" onclick="next()" class="hidden">➡️ Verbe suivant</button>
+</div>
+
+<div id="statsPanel" class="hidden">
+  <h2>📊 Statistiques</h2>
+  <div id="statsContent"></div>
+  <p>Notifications : <strong id="etatNotif"></strong></p>
+  <button onclick="fermerStats()">⬅ Retour</button>
+</div>
+</div>
+
+<script>
+
+const youpiAudio = document.getElementById("youpiAudio");
+const eOhAudio = document.getElementById("eOhAudio");
+
+
+
+// ================== PARAMÈTRES ==================
+const TAILLE_GROUPE = 5;
+const SEUIL_MAITRISE = 3;
+const QUESTION_TYPES = ["classique", "sens_inf", "inf_sens"];
+const INTERVALLES = [1, 3, 7, 14, 30]; // jours
+
+// ================== VERBES ==================
+const verbes = [
+  { inf:"be", pres:"be", pret:"was / were", parf:"been", sens:"être" },
+  { inf:"become", pres:"become", pret:"became", parf:"become", sens:"devenir" },
+  { inf:"begin", pres:"begin", pret:"began", parf:"begun", sens:"commencer" },
+  { inf:"break", pres:"break", pret:"broke", parf:"broken", sens:"casser" },
+  { inf:"bring", pres:"bring", pret:"brought", parf:"brought", sens:"apporter" },
+  { inf:"build", pres:"build", pret:"built", parf:"built", sens:"construire" },
+  { inf:"buy", pres:"buy", pret:"bought", parf:"bought", sens:"acheter" },
+  { inf:"choose", pres:"choose", pret:"chose", parf:"chosen", sens:"choisir" },
+  { inf:"come", pres:"come", pret:"came", parf:"come", sens:"venir" },
+  { inf:"do", pres:"do", pret:"did", parf:"done", sens:"faire" },
+  { inf:"drink", pres:"drink", pret:"drank", parf:"drunk", sens:"boire" },
+  { inf:"eat", pres:"eat", pret:"ate", parf:"eaten", sens:"manger" },
+  { inf:"find", pres:"find", pret:"found", parf:"found", sens:"trouver" },
+  { inf:"get", pres:"get", pret:"got", parf:"got / gotten", sens:"obtenir" },
+  { inf:"give", pres:"give", pret:"gave", parf:"given", sens:"donner" },
+  { inf:"go", pres:"go", pret:"went", parf:"gone", sens:"aller" },
+  { inf:"have", pres:"have", pret:"had", parf:"had", sens:"avoir" },
+  { inf:"know", pres:"know", pret:"knew", parf:"known", sens:"savoir / connaître" },
+  { inf:"see", pres:"see", pret:"saw", parf:"seen", sens:"voir" },
+  { inf:"take", pres:"take", pret:"took", parf:"taken", sens:"prendre" }
+];
+
+// ================== NORMALISATION ==================
+function norm(t) {
+  return t.trim().toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"");
+}
+
+// ================== STATS ==================
+let stats = JSON.parse(localStorage.getItem("statsEN")) || {};
+verbes.forEach(v=>{
+  if(!stats[v.inf]){
+    stats[v.inf] = {
+      propositions:0,
+      erreurs:0,
+      maitrise:0,
+      interval:0,
+      nextReview:0
+    };
+  }
+});
+
+// ================== GROUPES ==================
+function groupesDebloques() {
+  let groupes = [];
+  for(let i=0;i<verbes.length;i+=TAILLE_GROUPE){
+    const g = verbes.slice(i,i+TAILLE_GROUPE);
+    const ok = g.every(v=>stats[v.inf].maitrise>=1);
+    groupes.push({debut:i+1, fin:i+g.length, ok});
+    if(!ok) break;
+  }
+  return groupes;
+}
+
+function verbesDisponibles(){
+  const groupes = groupesDebloques();
+  const max = groupes.length * TAILLE_GROUPE;
+  const nouveaux = verbes.slice(0,max);
+  const anciens = verbes.slice(0,Math.max(0,max-TAILLE_GROUPE));
+  return Math.random()<0.3 && anciens.length ? anciens : nouveaux;
+}
+
+// ================== NOTIFICATIONS ==================
+function verbesEnAttente(){
+  const now = Date.now();
+  return verbes.filter(v=>stats[v.inf].nextReview && stats[v.inf].nextReview<=now);
+}
+
+function envoyerNotification(nb){
+  if(Notification.permission!=="granted") return;
+  new Notification("📘 Révision anglais", {
+    body:`${nb} verbe(s) à réviser aujourd’hui 💪`
+  });
+}
+
+function verifierRevisions(){
+  if(localStorage.getItem("notifEN")!=="true") return;
+  const today = new Date().toISOString().slice(0,10);
+  if(localStorage.getItem("lastNotifEN")===today) return;
+  const a=verbesEnAttente();
+  if(a.length){
+    envoyerNotification(a.length);
+    localStorage.setItem("lastNotifEN",today);
+  }
+}
+
+function activerNotifications(){
+  Notification.requestPermission().then(p=>{
+    if(p==="granted"){
+      localStorage.setItem("notifEN","true");
+      majNotifBtns();
+      verifierRevisions();
+    }
+  });
+}
+function desactiverNotifications(){
+  localStorage.setItem("notifEN","false");
+  majNotifBtns();
+}
+function majNotifBtns(){
+  const on = localStorage.getItem("notifEN")==="true";
+  btnActiverNotif.classList.toggle("hidden",on);
+  btnDesactiverNotif.classList.toggle("hidden",!on);
+  etatNotif.textContent = on?"🔔 Activées":"🔕 Désactivées";
+}
+majNotifBtns();
+setInterval(verifierRevisions,3600000);
+
+// ================== QUIZ ==================
+let current=null, questionType="classique";
+
+function start(){
+  menu.classList.add("hidden");
+  quiz.classList.remove("hidden");
+  next();
+}
+
+function choisirVerbe(){
+  const liste = verbesDisponibles();
+  return liste[Math.floor(Math.random()*liste.length)];
+}
+
+function next(){
+  current = choisirVerbe();
+  stats[current.inf].propositions++;
+  questionType = QUESTION_TYPES[Math.floor(Math.random()*QUESTION_TYPES.length)];
+
+  inf.textContent = sens.textContent = "";
+  pres.value = pret.value = parf.value = extraInput.value = "";
+
+  extraLabel.classList.add("hidden");
+  presLabel.classList.remove("hidden");
+  pretLabel.classList.remove("hidden");
+  parfLabel.classList.remove("hidden");
+
+  if(questionType==="classique"){
+    inf.textContent=current.inf;
+    sens.textContent=current.sens;
+  }
+  if(questionType==="sens_inf"){
+    sens.textContent=current.sens;
+    extraLabel.classList.remove("hidden");
+    presLabel.classList.add("hidden");
+    pretLabel.classList.add("hidden");
+    parfLabel.classList.add("hidden");
+  }
+  if(questionType==="inf_sens"){
+    inf.textContent=current.inf;
+    extraLabel.classList.remove("hidden");
+    presLabel.classList.add("hidden");
+    pretLabel.classList.add("hidden");
+    parfLabel.classList.add("hidden");
+  }
+
+  result.innerHTML="";
+  nextBtn.classList.add("hidden");
+  messageEncouragement.classList.add("hidden");
+}
+
+function diff(u,s){
+  let h="";
+  for(let i=0;i<Math.max(u.length,s.length);i++){
+    h+=u[i]===s[i]?`<span class="good">${u[i]||""}</span>`:`<span class="bad">${u[i]||"␣"}</span>`;
+  }
+  return h;
+}
+
+function check(){
+  let score=0, fb="";
+  if(questionType==="classique"){
+    if(norm(pres.value)===norm(current.pres)) score++; else fb+=`<br>Base: ${diff(pres.value,current.pres)}`;
+    if(norm(pret.value)===norm(current.pret)) score++; else fb+=`<br>Prétérit: ${diff(pret.value,current.pret)}`;
+    if(norm(parf.value)===norm(current.parf)) score++; else fb+=`<br>Participe: ${diff(parf.value,current.parf)}`;
+  }
+  if(questionType==="sens_inf" && norm(extraInput.value)===norm(current.inf)) score=3;
+  if(questionType==="inf_sens" && norm(extraInput.value)===norm(current.sens.split("/")[0])) score=3;
+
+  if(score===3){
+    stats[current.inf].maitrise++;
+    const i=Math.min(stats[current.inf].interval,INTERVALLES.length-1);
+    stats[current.inf].nextReview=Date.now()+INTERVALLES[i]*86400000;
+    stats[current.inf].interval++;
+  } else {
+    stats[current.inf].erreurs++;
+    stats[current.inf].interval=0;
+  }
+
+  localStorage.setItem("statsEN",JSON.stringify(stats));
+
+  result.innerHTML=`
+    <strong>Correction</strong><br>
+    ${current.inf} – ${current.sens}<br>
+    ${current.pres} / ${current.pret} / ${current.parf}
+    <br>🎯 ${score}/3
+    ${fb?`<hr>${fb}`:""}
+  `;
+
+  if(score===3) nextBtn.classList.remove("hidden");
+  else messageEncouragement.classList.remove("hidden");
+    if (score === 3) {
+    stats[current.inf].maitrise++;
+    youpiAudio.play();
+  } else {
+    stats[current.inf].erreurs++;
+    eOhAudio.play();
+  }
+}
+
+// ================== STATS ==================
+function afficherStats(){
+  menu.classList.add("hidden");
+  quiz.classList.add("hidden");
+  statsPanel.classList.remove("hidden");
+
+  let html="<h3>📦 Groupes débloqués</h3>";
+  groupesDebloques().forEach((g,i)=>{
+    html+=`<p>Groupe ${i+1} (${g.debut}-${g.fin}) : ${g.ok?"✅":"🔒"}</p>`;
+  });
+
+  statsContent.innerHTML=html;
+}
+function fermerStats(){
+  statsPanel.classList.add("hidden");
+  menu.classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
