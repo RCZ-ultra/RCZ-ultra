@@ -24,10 +24,58 @@ input { width:100%; padding:8px; margin-top:4px; }
 button { margin-top:15px; padding:10px; width:100%; font-size:16px; }
 .hidden { display:none; }
 .result { margin-top:15px; }
+
+table td, table th {
+  border: 1px solid #ccc;
+  padding: 6px;
+  font-size: 14px;
+}
+
+table tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.verbe-maitrise {
+  background: #d4edda;
+  color: #155724;
+}
+
+.verbe-probleme {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.verbe-neutre {
+  background: #ffffff;
+}
+
+.verbe-maitrise td,
+.verbe-probleme td,
+.verbe-neutre td {
+  border: 1px solid #ccc;
+  padding: 6px;
+}
+
+@keyframes successFlash {
+  0%   { background-color: #ffffff; }
+  30%  { background-color: #d4edda; }
+  100% { background-color: #ffffff; }
+}
+
+@keyframes successPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.success-animation {
+  animation: successFlash 0.6s ease, successPop 0.4s ease;
+}
+
 </style>
 </head>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- La librairie jspdf est utilisé pour générer le PDF des statistiques -->
 
 <body>
 
@@ -41,6 +89,10 @@ button { margin-top:15px; padding:10px; width:100%; font-size:16px; }
   <button onclick="afficherStats()">📊 Statistiques</button>
 <button id="btnActiverNotif" onclick="activerNotifications()">🔔 Activer les notifications</button>
 <button id="btnDesactiverNotif" onclick="desactiverNotifications()" class="hidden">🔕 Désactiver les notifications</button>
+<p style="text-align:center; margin-top:10px;">
+  🔥 Série actuelle : <strong id="streakMenu">0</strong> jour(s)
+</p>
+
 </div>
 
 <audio id="youpiAudio" src="youpi.mp3"></audio>
@@ -53,19 +105,19 @@ button { margin-top:15px; padding:10px; width:100%; font-size:16px; }
 
   <label id="extraLabel" class="hidden">
     Ta réponse
-    <input id="extraInput">
+    <input id="extraInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </label>
 
   <label id="presLabel">Présent
-    <input id="pres">
+    <input id="pres" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </label>
 
   <label id="pretLabel">Prétérit
-    <input id="pret">
+    <input id="pret" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </label>
 
   <label id="parfLabel">Parfait
-    <input id="parf">
+    <input id="parf" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </label>
 
   <button onclick="check()">Valider</button>
@@ -77,45 +129,54 @@ button { margin-top:15px; padding:10px; width:100%; font-size:16px; }
 </div>
 
 <div id="verbesPerso" class="hidden">
-  <h2>➕ Ajouter un verbe personnalisé</h2>
+  <h2>📂 Mes listes de verbes</h2>
 
-  <label>Infinitif
-    <input id="p_inf">
+  <label>Nouvelle liste
+    <input id="nomListe">
   </label>
+  <button onclick="creerListe()">➕ Créer la liste</button>
 
-  <label>Présent
-    <input id="p_pres">
-  </label>
+  <div id="listesExistantes"></div>
 
-  <label>Prétérit
-    <input id="p_pret">
-  </label>
+  <hr>
 
-  <label>Parfait
-    <input id="p_parf">
-  </label>
+  <div id="gestionListe" class="hidden">
+    <h3 id="titreListe"></h3>
 
-  <label>Sens (séparés par ; )
-    <input id="p_sens">
-  </label>
+    <label>Infinitif <input id="p_inf"></label>
+    <label>Présent <input id="p_pres"></label>
+    <label>Prétérit <input id="p_pret"></label>
+    <label>Parfait <input id="p_parf"></label>
+    <label>Sens ( ; pour séparer) <input id="p_sens"></label>
 
-  <button onclick="ajouterVerbePerso()">💾 Ajouter</button>
-  <button onclick="reviserVerbesPerso()">🎯 Réviser ces verbes</button>
+    <button onclick="ajouterVerbePerso()">💾 Ajouter le verbe</button>
+    <button onclick="reviserListePerso()">🎯 Réviser cette liste</button>
+    <button onclick="exporterListe()">📤 Exporter la liste</button>
 
-  <div id="listeVerbesPerso"></div>
+<label style="margin-top:10px;">
+  📥 Importer une liste
+  <input type="file" id="importListeInput" accept=".json" onchange="importerListe(event)">
+</label>
+
+
+    <div id="listeVerbesPerso"></div>
+  </div>
 </div>
+
 
 
 <div id="statsPanel" class="hidden">
   <h2>📊 Statistiques</h2>
   <div id="statsContent"></div>
+  <div id="listeCompleteVerbes" class="hidden"></div>
   <p>
   Notifications :
   <strong id="etatNotif"></strong>
 </p>
-<button onclick="exporterDonnees()">💾 Exporter mes statistiques</button>
-<button onclick="importerDonnees()">📂 Importer des statistiques</button>
+<button onclick="exporterDonnees()">💾 Exporter mes progrès et statistiques</button>
+<button onclick="importerDonnees()">📂 Importer mes progrès et statistiques</button>
 <button onclick="exporterPDF()">📄 Générer un PDF de mes statistiques</button>
+<button onclick="afficherTousLesVerbes()">📋 Voir tous les verbes</button>
 
 <input type="file" id="importFile" accept=".json" class="hidden">
 
@@ -205,15 +266,293 @@ const verbes = [
 ];
 
 // ============VERBES PERSONNALISéS =================//
+
+//listesPerso = {
+//  "Ma liste 1": [ {inf, pres, ...}, ... ],
+//  "Verbes difficiles": [ ... ],
+//  "Cours allemand": [ ... ]
+//}
+
+function supprimerListe(nom) {
+  if (!confirm(`Supprimer la liste "${nom}" ?`)) return;
+  delete listesPerso[nom];
+  localStorage.setItem("listesPerso", JSON.stringify(listesPerso));
+  afficherListes();
+}
+
+
+let listesPerso =
+  JSON.parse(localStorage.getItem("listesPerso")) || {};
+
+let listePersoActive = null;
+
     let verbesPersonnalises =
         JSON.parse(localStorage.getItem("verbesPerso")) || [];
 
   let verbesDeBase = [...verbes];
   let verbesActifs = verbesDeBase;
+
+
+function creerListe() {
+  const nom = nomListe.value.trim();
+  if (!nom || listesPerso[nom]) {
+    alert("Nom invalide ou déjà existant");
+    return;
+  }
+
+  listesPerso[nom] = [];
+  localStorage.setItem("listesPerso", JSON.stringify(listesPerso));
+  nomListe.value = "";
+  afficherListes();
+}
+
+function afficherListes() {
+  const div = document.getElementById("listesExistantes");
+  div.innerHTML = "<h3>📚 Listes existantes</h3>";
+
+  Object.keys(listesPerso).forEach(nom => {
+    const container = document.createElement("div");
+
+    const span = document.createElement("span");
+    span.textContent = nom;
+
+    const btnEdit = document.createElement("button");
+    btnEdit.textContent = "✏️";
+    btnEdit.addEventListener("click", () => ouvrirListe(nom));
+
+    const btnDelete = document.createElement("button");
+    btnDelete.textContent = "❌";
+    btnDelete.addEventListener("click", () => supprimerListe(nom));
+
+    container.appendChild(span);
+    container.appendChild(btnEdit);
+    container.appendChild(btnDelete);
+
+    div.appendChild(container);
+  });
+}
+
+
+// =========== VERBES DÉBLOQUÉS ==============
+function getVerbesDebloques(listeVerbes) {
+  const TAILLE_GROUPE = 5;
+  let groupesDebloques = 1; // le 1er est toujours dispo
+
+  for (let i = 0; i < listeVerbes.length; i += TAILLE_GROUPE) {
+    const groupe = listeVerbes.slice(i, i + TAILLE_GROUPE);
+
+    const maitrisés = groupe.filter(v =>
+      stats[v.inf] && stats[v.inf].maitrise >= 3 // les verbes suivants sont débloqués quand tous les premiers verbes sont maîtrisés
+    ).length;
+
+    if (maitrisés >= 3) {
+      groupesDebloques++;
+      console.log("Groupes débloqués");
+    } else {
+      break;
+    }
+  }
+
+  return listeVerbes.slice(0, groupesDebloques * TAILLE_GROUPE);
+}
+
+
+
 // ================== NORMALISATION ==================
 function normaliser(texte) {
   return texte.trim().toLowerCase();
 }
+
+// ================ ANIMATION QUAND ON RÉUSSI UN VERBE ==============
+
+function animationBonneReponse() {
+  const card = document.querySelector(".card");
+  card.classList.remove("success-animation"); // reset
+  void card.offsetWidth; // force reflow
+  card.classList.add("success-animation");
+}
+
+
+// ================== SUCCÈS ====================
+const SUCCES = [
+  {
+    id: "premier_verbe",
+    titre: "Première victoire 🎉",
+    description: "Réviser ton premier verbe",
+    condition: () => {
+      return Object.values(stats).some(s => s.propositions >= 1);
+    }
+  },
+  {
+    id: "10_maitrises",
+    titre: "Ça rentre ! 💪",
+    description: "Atteindre 10 maîtrises",
+    condition: () => {
+      return Object.values(stats).reduce((s, v) => s + v.maitrise, 0) >= 10;
+    }
+  },
+  {
+    id: "streak_7",
+    titre: "Régularité 🔥",
+    description: "Série de 7 jours consécutifs",
+    condition: () => {
+      const streak = JSON.parse(localStorage.getItem("streak")) || { count: 0 };
+      return streak.count >= 7;
+    }
+  },
+  {
+    id: "sans_faute",
+    titre: "Sans faute 🧠",
+    description: "3 réponses parfaites d’affilée",
+    condition: () => {
+      return succesState.perfectStreak >= 3;
+    }
+  },
+  {
+  id: "verbe_maitrise",
+  titre: "Sous contrôle ✅",
+  description: "Maîtriser complètement un verbe",
+  condition: () => {
+    return Object.values(stats).some(v => v.maitrise >= 5);
+    }
+  },
+  {
+  id: "revanche",
+  titre: "Revanche 🔁",
+  description: "Transformer un verbe problématique en verbe maîtrisé",
+  condition: () => {
+      return Object.values(stats).some(v => v.erreurs >= 3 && v.maitrise >= 5);
+    }
+  },
+{
+  id: "50_propositions",
+  titre: "Ça travaille 📚",
+  description: "Réviser 50 verbes au total",
+  condition: () => {
+    return Object.values(stats)
+      .reduce((s, v) => s + v.propositions, 0) >= 50;
+  }
+},
+{
+  id: "100_propositions",
+  titre: "Machine à verbes 🤖",
+  description: "Réviser 100 verbes au total",
+  condition: () => {
+    return Object.values(stats)
+      .reduce((s, v) => s + v.propositions, 0) >= 100;
+  }
+},
+{
+  id: "verbes_problematiques",
+  titre: "Face à la difficulté 🧱",
+  description: "Réviser 10 fois des verbes problématiques",
+  condition: () => {
+    return sessionStats.problematiquesRevises >= 10;
+  }
+},
+{
+  id: "tout_vert",
+  titre: "Tout au vert ✅",
+  description: "Avoir 5 verbes en zone maîtrisée",
+  condition: () => {
+    return Object.values(stats)
+      .filter(v => v.maitrise >= 5 && v.erreurs === 0).length >= 5;
+  }
+},
+{
+  id: "createur_verbes",
+  titre: "Créateur 📖",
+  description: "Créer 10 verbes personnalisés",
+  condition: () => {
+    return Object.keys(verbesPersonnalises || {}).length >= 10;
+  }
+},
+{
+  id: "exporteur",
+  titre: "Sauvegarde 🔐",
+  description: "Exporter ses statistiques ou ses verbes",
+  condition: () => {
+    return succesState.exportEffectue === true;
+  }
+},
+{
+  id: "importeur",
+  titre: "Retour gagnant 🔄",
+  description: "Importer des statistiques ou une liste",
+  condition: () => {
+    return succesState.importEffectue === true;
+  }
+},
+{
+  id: "revision_planifiee",
+  titre: "Mémoire longue 🧠",
+  description: "Compléter 5 révisions planifiées",
+  condition: () => {
+    return succesState.revisionsPlanifiees >= 5;
+  }
+},
+{
+  id: "streak_30",
+  titre: "Habitude ancrée 🔥",
+  description: "Série de 30 jours consécutifs",
+  condition: () => {
+    const streak = JSON.parse(localStorage.getItem("streak")) || { count: 0 };
+    return streak.count >= 30;
+  }
+},
+{
+  id: "perfectionniste",
+  titre: "Perfectionniste ✨",
+  description: "Répondre parfaitement à 10 verbes consécutifs",
+  condition: () => {
+    return succesState.perfectStreak >= 10;
+  }
+}
+
+];
+
+let succesState = JSON.parse(localStorage.getItem("succes")) || {
+  debloques: [],
+  perfectStreak: 0
+};
+
+function verifierSucces() {
+  let nouveau = false;
+
+  SUCCES.forEach(s => {
+    if (!succesState.debloques.includes(s.id) && s.condition()) {
+      succesState.debloques.push(s.id);
+      afficherSucces(s);
+      nouveau = true;
+    }
+  });
+
+  if (nouveau) {
+    localStorage.setItem("succes", JSON.stringify(succesState));
+  }
+}
+
+function afficherSucces(succes) {
+  const div = document.createElement("div");
+  div.style.position = "fixed";
+  div.style.bottom = "20px";
+  div.style.right = "20px";
+  div.style.background = "#ffd700";
+  div.style.padding = "15px";
+  div.style.borderRadius = "10px";
+  div.style.boxShadow = "0 4px 10px rgba(0,0,0,.2)";
+  div.style.zIndex = 9999;
+  div.innerHTML = `
+    <strong>🏆 Succès débloqué !</strong><br>
+    ${succes.titre}<br>
+    <small>${succes.description}</small>
+  `;
+
+  document.body.appendChild(div);
+
+  setTimeout(() => div.remove(), 4000);
+}
+
 
 // ================== VARIABLES ==================
 let mode = "random";
@@ -224,6 +563,11 @@ const youpiAudio = document.getElementById("youpiAudio");
 const eOhAudio = document.getElementById("eOhAudio");
 
 let stats = JSON.parse(localStorage.getItem("stats")) || {};
+let streak = JSON.parse(localStorage.getItem("streak")) || {
+  count: 0,
+  lastDate: null
+};
+
 verbes.forEach(v => {
   if (!stats[v.inf]) stats[v.inf] = stats[inf] = {
   propositions: 0,
@@ -234,6 +578,8 @@ verbes.forEach(v => {
 };
 ;
 });
+
+let cacheTousLesVerbes = [];
 
 const TAILLE_GROUPE = 5;
 
@@ -365,18 +711,21 @@ function verbesDisponibles() {
 }
 
 function choisirVerbe() {
-  const liste = verbesDisponibles();
+  const verbesDisponibles = getVerbesDebloques(verbesActifs);
 
-  if (mode === "random") {
-    return liste[Math.floor(Math.random() * liste.length)];
-  }
-
-  let cibles = liste.filter(v =>
-    stats[v.inf].erreurs > stats[v.inf].maitrise ||
-    stats[v.inf].maitrise < 4
+  // réactivation d'anciens verbes (oubli contrôlé)
+  const anciens = verbesDisponibles.filter(v =>
+    stats[v.inf].erreurs > stats[v.inf].maitrise
   );
 
-  return (cibles.length ? cibles : liste)[Math.floor(Math.random() * liste.length)];
+  let pool = verbesDisponibles;
+
+  // 30 % de chance de revoir un ancien verbe
+  if (anciens.length > 0 && Math.random() < 0.3) {
+    pool = anciens;
+  }
+
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function afficherStats() {
@@ -412,11 +761,72 @@ function afficherStats() {
   });
 
   document.getElementById("statsContent").innerHTML = html;
+  const streak = JSON.parse(localStorage.getItem("streak")) || { count: 0 };
+
+html += `
+  <hr>
+  <h3>🔥 Série de jours</h3>
+  <p>
+    Série actuelle :
+    <strong style="font-size:18px;">
+      ${streak.count} jour${streak.count > 1 ? "s" : ""}
+    </strong>
+  </p>
+`;
+
+html += `
+  <hr>
+  <h3>🏆 Succès</h3>
+`;
+
+SUCCES.forEach(s => {
+  const debloque = succesState.debloques.includes(s.id);
+  html += `
+    <div style="
+      padding:8px;
+      margin-bottom:6px;
+      border-radius:6px;
+      background:${debloque ? "#d4edda" : "#eee"};
+      opacity:${debloque ? "1" : "0.5"};
+    ">
+      <strong>${debloque ? "✅" : "🔒"} ${s.titre}</strong><br>
+      <small>${s.description}</small>
+    </div>
+  `;
+});
+
+  document.getElementById("statsContent").innerHTML = html;
+
 }
 
 function fermerStats() {
   document.getElementById("statsPanel").classList.add("hidden");
   document.getElementById("menu").classList.remove("hidden");
+}
+
+
+// =========== STREAK JOURNALIER ==================
+function majStreak() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (streak.lastDate === today) return; // déjà compté aujourd’hui
+
+  if (!streak.lastDate) {
+    streak.count = 1;
+  } else {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yestStr = yesterday.toISOString().slice(0, 10);
+
+    if (streak.lastDate === yestStr) {
+      streak.count++;
+    } else {
+      streak.count = 1; // streak cassée
+    }
+  }
+
+  streak.lastDate = today;
+  localStorage.setItem("streak", JSON.stringify(streak));
 }
 
 
@@ -486,7 +896,7 @@ function reponseCorrecte(userInput, solutions) {
     .some(s => s === user);
 }
 
-function comparaisonVisuelle(userInput, solution) {
+function comparaisonVisuelle(userInput, solution) { //affiche quels sont les erreurs caractères par caractères
   let html = "";
   const max = Math.max(userInput.length, solution.length);
 
@@ -540,10 +950,12 @@ function check() {
     else feedback = comparaisonVisuelle(extraInput.value, current.sens.split(/[,/]/)[0]);
   }
 
-  if (score === 3) {
-    stats[current.inf].maitrise++;
-    youpiAudio.play();
-  } else {
+if (score === 3) {
+  stats[current.inf].maitrise++;
+  youpiAudio.play();
+  animationBonneReponse();
+}
+ else {
     stats[current.inf].erreurs++;
     eOhAudio.play();
   }
@@ -563,6 +975,16 @@ function check() {
 
   if (score === 3) nextBtn.classList.remove("hidden");
   else messageEncouragement.classList.remove("hidden");
+  majStreak();
+  if (score === 3) {
+  succesState.perfectStreak++;
+} else {
+  succesState.perfectStreak = 0;
+}
+
+verifierSucces();
+localStorage.setItem("succes", JSON.stringify(succesState));
+
 }
 
 
@@ -654,7 +1076,7 @@ function exporterPDF() {
 
   // 🔥 Streak
   doc.setFontSize(12);
-  doc.text(`🔥 Streak actuel : ${streak.count || 0} jour(s)`, 10, y);
+  doc.text(`Streak actuel : ${streak.count || 0} jour(s)`, 10, y);
   y += 10;
 
   // 📊 Stats globales
@@ -666,7 +1088,7 @@ function exporterPDF() {
     erreurs += v.erreurs || 0;
   });
 
-  doc.text(`📊 Statistiques globales`, 10, y);
+  doc.text(`Statistiques globales`, 10, y);
   y += 6;
   doc.text(`• Tentatives : ${total}`, 12, y); y += 5;
   doc.text(`• Maîtrises : ${mait}`, 12, y); y += 5;
@@ -677,11 +1099,11 @@ function exporterPDF() {
     Object.values(stats).filter(v => v.maitrise >= 3).length / 5
   );
 
-  doc.text(`🔓 Groupes débloqués : ${groupesDebloques}`, 10, y);
+  doc.text(`Groupes débloqués : ${groupesDebloques}`, 10, y);
   y += 10;
 
   // 🧠 Verbes maîtrisés
-  doc.text("🧠 Verbes maîtrisés :", 10, y);
+  doc.text("Verbes maîtrisés :", 10, y);
   y += 6;
 
   Object.entries(stats)
@@ -695,7 +1117,7 @@ function exporterPDF() {
   y += 5;
 
   // ⚠️ Verbes à revoir
-  doc.text("⚠️ Verbes à revoir :", 10, y);
+  doc.text("Verbes à revoir :", 10, y);
   y += 6;
 
   Object.entries(stats)
@@ -716,10 +1138,43 @@ function ouvrirVerbesPerso() {
   document.getElementById("menu").classList.add("hidden");
   document.getElementById("quiz").classList.add("hidden");
   document.getElementById("verbesPerso").classList.remove("hidden");
-  afficherVerbesPerso();
+  afficherListes();
+//  afficherVerbesPerso();
+}
+
+function afficherVerbesListe() {
+  const div = document.getElementById("listeVerbesPerso");
+  const liste = listesPerso[listePersoActive];
+
+  div.innerHTML = "<h4>📖 Verbes</h4>";
+
+  liste.forEach((v, i) => {
+    div.innerHTML += `
+      <div>
+        ${v.inf} – ${v.sens}
+        <button onclick="supprimerVerbeListe(${i})">❌</button>
+      </div>
+    `;
+  });
+}
+
+function supprimerVerbeListe(index) {
+  listesPerso[listePersoActive].splice(index, 1);
+  localStorage.setItem("listesPerso", JSON.stringify(listesPerso));
+  afficherVerbesListe();
+}
+
+
+function ouvrirListe(nom) {
+  listePersoActive = nom;
+  document.getElementById("gestionListe").classList.remove("hidden");
+  document.getElementById("titreListe").textContent = `📘 ${nom}`;
+  afficherVerbesListe();
 }
 
 function ajouterVerbePerso() {
+  if (!listePersoActive) return;
+
   const v = {
     inf: p_inf.value.trim(),
     pres: p_pres.value.trim(),
@@ -728,37 +1183,42 @@ function ajouterVerbePerso() {
     sens: p_sens.value.trim()
   };
 
-  if (!v.inf || !v.pres || !v.pret || !v.parf || !v.sens) {
-    alert("Tous les champs sont obligatoires");
+  if (Object.values(v).some(x => !x)) {
+    alert("Tous les champs sont requis");
     return;
   }
 
-  verbesPersonnalises.push(v);
-  localStorage.setItem("verbesPerso", JSON.stringify(verbesPersonnalises));
+  listesPerso[listePersoActive].push(v);
+  localStorage.setItem("listesPerso", JSON.stringify(listesPerso));
 
-  // stats initiales
-  stats[v.inf] = { propositions: 0, erreurs: 0, maitrise: 0 };
-  localStorage.setItem("stats", JSON.stringify(stats));
+  if (!stats[v.inf]) {
+    stats[v.inf] = { propositions: 0, erreurs: 0, maitrise: 0 };
+    localStorage.setItem("stats", JSON.stringify(stats));
+  }
 
   ["p_inf","p_pres","p_pret","p_parf","p_sens"].forEach(id => {
     document.getElementById(id).value = "";
   });
 
-  afficherVerbesPerso();
+  afficherVerbesListe();
 }
-function afficherVerbesPerso() {
-  const div = document.getElementById("listeVerbesPerso");
-  div.innerHTML = "<h3>📚 Mes verbes</h3>";
 
-  verbesPersonnalises.forEach((v, i) => {
-    div.innerHTML += `
-      <div>
-        ${v.inf} – ${v.sens}
-        <button onclick="supprimerVerbePerso(${i})">❌</button>
-      </div>
-    `;
-  });
+function reviserListePerso() {
+  const liste = listesPerso[listePersoActive];
+  if (!liste.length) {
+    alert("Liste vide");
+    return;
+  }
+
+  verbesActifs = liste;
+  mode = "random";
+
+  document.getElementById("verbesPerso").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+
+  next();
 }
+
 
 function supprimerVerbePerso(index) {
   const inf = verbesPersonnalises[index].inf;
@@ -786,6 +1246,214 @@ function reviserVerbesPerso() {
   next();
 }
 
+function exporterListe() {
+  if (!listePersoActive) return;
+
+  const data = {
+    nom: listePersoActive,
+    verbes: listesPerso[listePersoActive]
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${listePersoActive.replace(/\s+/g, "_")}.json`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function importerListe(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      if (!data.nom || !Array.isArray(data.verbes)) {
+        throw "Format invalide";
+      }
+
+      let nom = data.nom;
+
+      // éviter écrasement
+      if (listesPerso[nom]) {
+        let i = 2;
+        while (listesPerso[`${nom} (${i})`]) i++;
+        nom = `${nom} (${i})`;
+      }
+
+      listesPerso[nom] = data.verbes;
+
+      // init stats si absentes
+      data.verbes.forEach(v => {
+        if (!stats[v.inf]) {
+          stats[v.inf] = { propositions: 0, erreurs: 0, maitrise: 0 };
+        }
+      });
+
+      localStorage.setItem("listesPerso", JSON.stringify(listesPerso));
+      localStorage.setItem("stats", JSON.stringify(stats));
+
+      afficherListes();
+      alert(`Liste "${nom}" importée avec succès`);
+    } catch (e) {
+      alert("❌ Fichier invalide");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+// =============== AFFICHER TOUS LES VERBES DANS STATISTIQUE ======================
+function afficherTousLesVerbes() {
+  const container = document.getElementById("listeCompleteVerbes");
+  container.classList.remove("hidden");
+
+  // fusion verbes de base + verbes personnalisés
+  let tousLesVerbes = [...verbes];
+  cacheTousLesVerbes = tousLesVerbes;
+
+  Object.values(listesPerso).forEach(liste => {
+    liste.forEach(v => {
+      if (!tousLesVerbes.find(x => x.inf === v.inf)) {
+        tousLesVerbes.push(v);
+      }
+    });
+  });
+
+let html = `
+  <hr>
+  <h3>📋 Tous les verbes</h3>
+
+  <div style="margin-bottom:10px;">
+    <button onclick="filtrerVerbes('tous')">📋 Tous</button>
+    <button onclick="filtrerVerbes('probleme')">🔴 Problématiques</button>
+    <button onclick="filtrerVerbes('maitrise')">🟢 Maîtrisés</button>
+    <button onclick="filtrerVerbes('encours')">⚪ En cours</button>
+    <button onclick="reviserVerbesProblemes()">🎯 Réviser les verbes problématiques</button>
+  </div>
+
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr style="background:#eee;">
+        <th>Infinitif</th>
+        <th>Sens</th>
+        <th>⭐ Maîtrise</th>
+        <th>❌ Erreurs</th>
+        <th>🔁 Proposé</th>
+      </tr>
+    </thead>
+    <tbody id="tbodyVerbes">
+`;
+
+
+  tousLesVerbes.forEach(v => {
+    const s = stats[v.inf] || { propositions: 0, erreurs: 0, maitrise: 0 };
+
+    let classe = "verbe-neutre";
+
+    if (s.erreurs > s.maitrise) {
+      classe = "verbe-probleme";
+    } else if (s.maitrise >= 3 && s.erreurs <= s.maitrise) {
+      classe = "verbe-maitrise";
+    }
+
+    html += `
+      <tr class="${classe}">
+        <td>${v.inf}</td>
+        <td>${v.sens}</td>
+        <td style="text-align:center;">${s.maitrise}</td>
+        <td style="text-align:center;">${s.erreurs}</td>
+        <td style="text-align:center;">${s.propositions}</td>
+      </tr>
+    `;
+  });
+
+
+  html += `</table>
+    <button onclick="fermerListeComplete()">⬆ Masquer</button>
+  `;
+
+  container.innerHTML = html;
+}
+
+function fermerListeComplete() {
+  document.getElementById("listeCompleteVerbes").classList.add("hidden");
+}
+
+// filtrer les verbes
+
+function filtrerVerbes(type) {
+  const rows = document.querySelectorAll("#tbodyVerbes tr");
+
+  rows.forEach(row => {
+    row.style.display = "";
+
+    if (type === "probleme" && !row.classList.contains("verbe-probleme")) {
+      row.style.display = "none";
+    }
+
+    if (type === "maitrise" && !row.classList.contains("verbe-maitrise")) {
+      row.style.display = "none";
+    }
+
+    if (type === "encours" &&
+        (row.classList.contains("verbe-probleme") || row.classList.contains("verbe-maitrise"))) {
+      row.style.display = "none";
+    }
+  });
+}
+
+// réviser les verbes problématiques
+function reviserVerbesProblemes() {
+  let problematiques = [];
+
+  // verbes de base
+  verbes.forEach(v => {
+    const s = stats[v.inf];
+    if (s && s.erreurs > s.maitrise) {
+      problematiques.push(v);
+    }
+  });
+
+  // verbes personnalisés
+  Object.values(listesPerso).forEach(liste => {
+    liste.forEach(v => {
+      const s = stats[v.inf];
+      if (s && s.erreurs > s.maitrise && !problematiques.find(x => x.inf === v.inf)) {
+        problematiques.push(v);
+      }
+    });
+  });
+
+  if (problematiques.length === 0) {
+    alert("🎉 Aucun verbe problématique !");
+    return;
+  }
+
+  verbesActifs = problematiques;
+  mode = "random";
+
+  document.getElementById("statsPanel").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+
+  next();
+}
+
+
+
+
+// update streak
+document.getElementById("streakMenu").textContent =
+  (JSON.parse(localStorage.getItem("streak")) || { count: 0 }).count;
 
 </script>
 
