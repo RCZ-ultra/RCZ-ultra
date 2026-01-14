@@ -85,7 +85,7 @@ table tr:nth-child(even) {
 <div id="menu">
 <!--  <button onclick="start('random')">🎲 Apprentissage aléatoire</button> -->
   <button onclick="start('cible')">🎯 Révision ciblée</button>
-  <button onclick="ouvrirVerbesPerso()">🧩 Verbes personnalisés</button>
+  <button onclick="ouvrirVerbesPerso()">🧩 Listes de verbes personnalisées</button>
   <button onclick="afficherStats()">📊 Statistiques</button>
 <button id="btnActiverNotif" onclick="activerNotifications()">🔔 Activer les notifications</button>
 <button id="btnDesactiverNotif" onclick="desactiverNotifications()" class="hidden">🔕 Désactiver les notifications</button>
@@ -143,7 +143,10 @@ table tr:nth-child(even) {
   <div id="gestionListe" class="hidden">
     <h3 id="titreListe"></h3>
 
-    <label>Infinitif <input id="p_inf"></label>
+<label>Infinitif
+  <input id="p_inf" onblur="autoCompleterVerbe()">
+</label>
+
     <label>Présent <input id="p_pres"></label>
     <label>Prétérit <input id="p_pret"></label>
     <label>Parfait <input id="p_parf"></label>
@@ -262,8 +265,127 @@ const verbes = [
   { inf: "schneiden", pres: "er schneidet", pret: "er schnitt", parf: "er hat geschnitten", sens: "couper" },
   { inf: "schreien", pres: "er schreit", pret: "er schrie", parf: "er hat geschrien", sens: "crier" },
   { inf: "schweigen", pres: "er schweigt", pret: "er schwieg", parf: "er hat geschwiegen", sens: "se taire" },
-  { inf: "steigen", pres: "er steigt", pret: "er stieg", parf: "er ist gestiegen", sens: "monter" }
+  { inf: "steigen", pres: "er steigt", pret: "er stieg", parf: "er ist gestiegen", sens: "monter" },
+  { inf: "trinken", pres: "er trinkt", pret: "er trank", parf: "er hat getrunken", sens: "boire" },
+  { inf: "schreiben", pres: "er schreibt", pret: "er schrieb", parf: "er hat geschrieben", sens: "écrire" },
+  { inf: "singen", pres: "er singt", pret: "er sang", parf: "er hat gesungen", sens: "chanter" },
+  { inf: "springen", pres: "er springt", pret: "er sprang", parf: "er ist gesprungen", sens: "sauter" },
+  { inf: "schwimmen", pres: "er schwimmt", pret: "er schwamm", parf: "er ist geschwommen", sens: "nager" },
+  { inf: "sterben", pres: "er stirbt", pret: "er starb", parf: "er ist gestorben", sens: "mourir" },
+  { inf: "verlieren", pres: "er verliert", pret: "er verlor", parf: "er hat verloren", sens: "perdre" },
+  { inf: "gewinnen", pres: "er gewinnt", pret: "er gewann", parf: "er hat gewonnen", sens: "gagner" },
+  { inf: "vergessen", pres: "er vergisst", pret: "er vergaß", parf: "er hat vergessen", sens: "oublier" },
+  { inf: "verstehen", pres: "er versteht", pret: "er verstand", parf: "er hat verstanden", sens: "comprendre" },
+
+  { inf: "waschen", pres: "er wäscht", pret: "er wusch", parf: "er hat gewaschen", sens: "laver" },
+  { inf: "wachsen", pres: "er wächst", pret: "er wuchs", parf: "er ist gewachsen", sens: "grandir / pousser" },
+  { inf: "waschen", pres: "er wäscht", pret: "er wusch", parf: "er hat gewaschen", sens: "laver" },
+  { inf: "weichen", pres: "er weicht", pret: "er wich", parf: "er ist gewichen", sens: "céder" },
+  { inf: "weisen", pres: "er weist", pret: "er wies", parf: "er hat gewiesen", sens: "indiquer" },
+
+  { inf: "ziehen", pres: "er zieht", pret: "er zog", parf: "er hat gezogen", sens: "tirer" },
+  { inf: "zwingen", pres: "er zwingt", pret: "er zwang", parf: "er hat gezwungen", sens: "forcer" },
+  { inf: "schmelzen", pres: "er schmilzt", pret: "er schmolz", parf: "er ist geschmolzen", sens: "fondre" },
+  { inf: "schließen", pres: "er schließt", pret: "er schloss", parf: "er hat geschlossen", sens: "fermer" },
+  { inf: "lügen", pres: "er lügt", pret: "er log", parf: "er hat gelogen", sens: "mentir" },
+
+  { inf: "steigen", pres: "er steigt", pret: "er stieg", parf: "er ist gestiegen", sens: "monter" },
+  { inf: "streiten", pres: "er streitet", pret: "er stritt", parf: "er hat gestritten", sens: "se disputer" },
+  { inf: "treiben", pres: "er treibt", pret: "er trieb", parf: "er hat getrieben", sens: "pousser / pratiquer" },
+  { inf: "tun", pres: "er tut", pret: "er tat", parf: "er hat getan", sens: "faire" },
+  { inf: "verzeihen", pres: "er verzeiht", pret: "er verzieh", parf: "er hat verziehen", sens: "pardonner" },
+
+  { inf: "winden", pres: "er windet", pret: "er wand", parf: "er hat gewunden", sens: "tordre" },
+  { inf: "werfen", pres: "er wirft", pret: "er warf", parf: "er hat geworfen", sens: "jeter" },
+  { inf: "ziehen", pres: "er zieht", pret: "er zog", parf: "er ist gezogen", sens: "déménager" },
+  { inf: "sinken", pres: "er sinkt", pret: "er sank", parf: "er ist gesunken", sens: "couler" },
+  { inf: "stinken", pres: "er stinkt", pret: "er stank", parf: "er hat gestunken", sens: "puer" },
+
+  { inf: "schelten", pres: "er schilt", pret: "er schalt", parf: "er hat gescholten", sens: "gronder" },
+  { inf: "scheren", pres: "er schert", pret: "er schor", parf: "er hat geschoren", sens: "tondre" },
+  { inf: "schieben", pres: "er schiebt", pret: "er schob", parf: "er hat geschoben", sens: "pousser" },
+  { inf: "schwören", pres: "er schwört", pret: "er schwor", parf: "er hat geschworen", sens: "jurer" },
+  { inf: "sieden", pres: "er siedet", pret: "er sott", parf: "er hat gesotten", sens: "bouillir" },
+
+  { inf: "verderben", pres: "er verdirbt", pret: "er verdarb", parf: "er ist verdorben", sens: "gâcher" },
+  { inf: "wiegen", pres: "er wiegt", pret: "er wog", parf: "er hat gewogen", sens: "peser" },
+  { inf: "zeihen", pres: "er zeiht", pret: "er zieh", parf: "er hat geziehen", sens: "accuser" },
+  { inf: "zerschneiden", pres: "er zerschneidet", pret: "er zerschnitt", parf: "er hat zerschnitten", sens: "découper" },
+  { inf: "ziehen", pres: "er zieht", pret: "er zog", parf: "er hat gezogen", sens: "tirer" },
+
+  { inf: "ab/biegen", pres: "er biegt ab", pret: "er bog ab", parf: "er hat abgebogen", sens: "tourner" },
+  { inf: "ab/nehmen", pres: "er nimmt ab", pret: "er nahm ab", parf: "er hat abgenommen", sens: "perdre du poids / enlever" },
+  { inf: "an/binden", pres: "er bindet an", pret: "er band an", parf: "er hat angebunden", sens: "attacher" },
+  { inf: "auf/brechen", pres: "er bricht auf", pret: "er brach auf", parf: "er ist aufgebrochen", sens: "partir / forcer" },
+  { inf: "auf/essen", pres: "er isst auf", pret: "er aß auf", parf: "er hat aufgegessen", sens: "finir de manger" },
+  { inf: "auf/fallen", pres: "er fällt auf", pret: "er fiel auf", parf: "er ist aufgefallen", sens: "frapper l’attention" },
+  { inf: "auf/geben", pres: "er gibt auf", pret: "er gab auf", parf: "er hat aufgegeben", sens: "abandonner" },
+  { inf: "auf/stehen", pres: "er steht auf", pret: "er stand auf", parf: "er ist aufgestanden", sens: "se lever" },
+  { inf: "aus/steigen", pres: "er steigt aus", pret: "er stieg aus", parf: "er ist ausgestiegen", sens: "descendre (véhicule)" },
+  { inf: "bei/beißen", pres: "er beißt zu", pret: "er biss zu", parf: "er hat zugebissen", sens: "mordre" },
+
+  { inf: "behalten", pres: "er behält", pret: "er behielt", parf: "er hat behalten", sens: "garder" },
+  { inf: "bei/bringen", pres: "er bringt bei", pret: "er brachte bei", parf: "er hat beigebracht", sens: "apprendre (enseigner)" },
+  { inf: "ein/werfen", pres: "er wirft ein", pret: "er warf ein", parf: "er hat eingeworfen", sens: "jeter dedans" },
+  { inf: "ein/ziehen", pres: "er zieht ein", pret: "er zog ein", parf: "er ist eingezogen", sens: "emménager" },
+  { inf: "empfinden", pres: "er empfindet", pret: "er empfand", parf: "er hat empfunden", sens: "ressentir" },
+  { inf: "ent/kommen", pres: "er kommt ent", pret: "er kam ent", parf: "er ist entkommen", sens: "s’échapper" },
+  { inf: "ent/stehen", pres: "er entsteht", pret: "er entstand", parf: "er ist entstanden", sens: "naître / surgir" },
+  { inf: "erkennen", pres: "er erkennt", pret: "er erkannte", parf: "er hat erkannt", sens: "reconnaître" },
+  { inf: "erwägen", pres: "er erwägt", pret: "er erwog", parf: "er hat erwogen", sens: "envisager" },
+  { inf: "essen", pres: "er isst", pret: "er aß", parf: "er hat gegessen", sens: "manger" },
+
+  { inf: "fest/halten", pres: "er hält fest", pret: "er hielt fest", parf: "er hat festgehalten", sens: "retenir" },
+  { inf: "fort/fahren", pres: "er fährt fort", pret: "er fuhr fort", parf: "er ist fortgefahren", sens: "continuer / partir" },
+  { inf: "fort/gehen", pres: "er geht fort", pret: "er ging fort", parf: "er ist fortgegangen", sens: "s’en aller" },
+  { inf: "frei/geben", pres: "er gibt frei", pret: "er gab frei", parf: "er hat freigegeben", sens: "libérer" },
+  { inf: "hin/fallen", pres: "er fällt hin", pret: "er fiel hin", parf: "er ist hingefallen", sens: "tomber" },
+  { inf: "hin/kommen", pres: "er kommt hin", pret: "er kam hin", parf: "er ist hingekommen", sens: "arriver" },
+  { inf: "los/lassen", pres: "er lässt los", pret: "er ließ los", parf: "er hat losgelassen", sens: "lâcher" },
+  { inf: "mit/bringen", pres: "er bringt mit", pret: "er brachte mit", parf: "er hat mitgebracht", sens: "apporter avec soi" },
+  { inf: "mit/nehmen", pres: "er nimmt mit", pret: "er nahm mit", parf: "er hat mitgenommen", sens: "emporter" },
+  { inf: "nach/denken", pres: "er denkt nach", pret: "er dachte nach", parf: "er hat nachgedacht", sens: "réfléchir" },
+
+  { inf: "preis/geben", pres: "er gibt preis", pret: "er gab preis", parf: "er hat preisgegeben", sens: "divulguer" },
+  { inf: "statt/finden", pres: "er findet statt", pret: "er fand statt", parf: "er hat stattgefunden", sens: "avoir lieu" },
+  { inf: "teil/nehmen", pres: "er nimmt teil", pret: "er nahm teil", parf: "er hat teilgenommen", sens: "participer" },
+  { inf: "über/geben", pres: "er gibt über", pret: "er gab über", parf: "er hat übergeben", sens: "remettre / vomir" },
+  { inf: "über/nehmen", pres: "er übernimmt", pret: "er übernahm", parf: "er hat übernommen", sens: "reprendre / assumer" },
+  { inf: "um/steigen", pres: "er steigt um", pret: "er stieg um", parf: "er ist umgestiegen", sens: "changer (transport)" },
+  { inf: "unter/gehen", pres: "er geht unter", pret: "er ging unter", parf: "er ist untergegangen", sens: "sombrer / se coucher" },
+  { inf: "ver/geben", pres: "er vergibt", pret: "er vergab", parf: "er hat vergeben", sens: "pardonner" },
+  { inf: "ver/lassen", pres: "er verlässt", pret: "er verließ", parf: "er hat verlassen", sens: "quitter" },
+  { inf: "ver/meiden", pres: "er vermeidet", pret: "er vermied", parf: "er hat vermieden", sens: "éviter" },
+
+  { inf: "vor/lesen", pres: "er liest vor", pret: "er las vor", parf: "er hat vorgelesen", sens: "lire à voix haute" },
+  { inf: "weg/werfen", pres: "er wirft weg", pret: "er warf weg", parf: "er hat weggeworfen", sens: "jeter" },
+  { inf: "weiter/geben", pres: "er gibt weiter", pret: "er gab weiter", parf: "er hat weitergegeben", sens: "transmettre" },
+  { inf: "zu/binden", pres: "er bindet zu", pret: "er band zu", parf: "er hat zugebunden", sens: "attacher" },
+  { inf: "zu/geben", pres: "er gibt zu", pret: "er gab zu", parf: "er hat zugegeben", sens: "avouer" },
+  { inf: "zu/nehmen", pres: "er nimmt zu", pret: "er nahm zu", parf: "er hat zugenommen", sens: "prendre du poids" },
+  { inf: "zurück/kommen", pres: "er kommt zurück", pret: "er kam zurück", parf: "er ist zurückgekommen", sens: "revenir" },
+  { inf: "zusammen/kommen", pres: "er kommt zusammen", pret: "er kam zusammen", parf: "er ist zusammengekommen", sens: "se réunir" },
+  { inf: "zunehmen", pres: "er nimmt zu", pret: "er nahm zu", parf: "er hat zugenommen", sens: "augmenter" }
 ];
+
+function getDictionnaireVerbes() {
+  const dict = {};
+
+  // verbes de base
+  verbes.forEach(v => {
+    dict[v.inf.toLowerCase()] = v;
+  });
+
+  // verbes personnalisés (toutes listes)
+  Object.values(listesPerso).forEach(liste => {
+    liste.forEach(v => {
+      dict[v.inf.toLowerCase()] = v;
+    });
+  });
+
+  return dict;
+}
+
 
 // ============VERBES PERSONNALISéS =================//
 
@@ -330,6 +452,32 @@ function afficherListes() {
 
     div.appendChild(container);
   });
+}
+
+// autocompletion verbe personnalisé lors de la saisie
+function autoCompleterVerbe() {
+  const inf = p_inf.value.trim().toLowerCase();
+  if (!inf) return;
+
+  const dict = getDictionnaireVerbes();
+  const verbe = dict[inf];
+
+  if (verbe) {
+    p_pres.value = verbe.pres || "";
+    p_pret.value = verbe.pret || "";
+    p_parf.value = verbe.parf || "";
+    p_sens.value = verbe.sens || "";
+
+    p_pres.disabled = true;
+    p_pret.disabled = true;
+    p_parf.disabled = true;
+    p_sens.disabled = true;
+  } else {
+    p_pres.disabled = false;
+    p_pret.disabled = false;
+    p_parf.disabled = false;
+    p_sens.disabled = false;
+  }
 }
 
 
@@ -1183,10 +1331,16 @@ function ajouterVerbePerso() {
     sens: p_sens.value.trim()
   };
 
-  if (Object.values(v).some(x => !x)) {
-    alert("Tous les champs sont requis");
-    return;
-  }
+if (!v.inf) {
+  alert("L'infinitif est obligatoire");
+  return;
+}
+
+if (!v.pres || !v.pret || !v.parf || !v.sens) {
+  alert("Verbe inconnu : merci de compléter toutes les formes");
+  return;
+}
+
 
   listesPerso[listePersoActive].push(v);
   localStorage.setItem("listesPerso", JSON.stringify(listesPerso));
@@ -1199,8 +1353,10 @@ function ajouterVerbePerso() {
   ["p_inf","p_pres","p_pret","p_parf","p_sens"].forEach(id => {
     document.getElementById(id).value = "";
   });
+[p_pres, p_pret, p_parf, p_sens].forEach(i => i.disabled = false);
 
   afficherVerbesListe();
+
 }
 
 function reviserListePerso() {
