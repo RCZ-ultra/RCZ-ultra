@@ -196,6 +196,587 @@ const QUESTION_TYPES = ["classique", "sens_inf", "inf_sens"];
 
 // ================== VERBES ==================
 const verbes = [
+    {
+      "inf": "an/bieten",
+      "pres": "er bietet an",
+      "pret": "er bot an",
+      "parf": "er hat angeboten",
+      "sens": "offrir"
+    },
+    {
+      "inf": "an/fangen",
+      "pres": "er fängt an",
+      "pret": "er fing an",
+      "parf": "er hat angefangen",
+      "sens": "commencer"
+    },
+    {
+      "inf": "an/kommen",
+      "pres": "er kommt an",
+      "pret": "er kam an",
+      "parf": "er ist angekommen",
+      "sens": "arriver"
+    },
+    {
+      "inf": "an/rufen",
+      "pres": "er ruft an",
+      "pret": "er rief an",
+      "parf": "er hat angerufen",
+      "sens": "appeler au téléphone"
+    },
+    {
+      "inf": "an/ziehen",
+      "pres": "er zieht an",
+      "pret": "er zog an",
+      "parf": "er hat angezogen",
+      "sens": "mettre (un vêtement)"
+    },
+    {
+      "inf": "aus/geben",
+      "pres": "er gibt aus",
+      "pret": "er gab aus",
+      "parf": "er hat ausgegeben",
+      "sens": "dépenser"
+    },
+    {
+      "inf": "aus/sehen",
+      "pres": "er sieht aus",
+      "pret": "er sah aus",
+      "parf": "er hat ausgesehen",
+      "sens": "avoir l'air"
+    },
+    {
+      "inf": "beginnen",
+      "pres": "er beginnt",
+      "pret": "er begann",
+      "parf": "er hat begonnen",
+      "sens": "commencer"
+    },
+    {
+      "inf": "bekommen",
+      "pres": "er bekommt",
+      "pret": "er bekam",
+      "parf": "er hat bekommen",
+      "sens": "recevoir, obtenir"
+    },
+    {
+      "inf": "begreifen",
+      "pres": "er begreift",
+      "pret": "er begriff",
+      "parf": "er hat begriffen",
+      "sens": "comprendre"
+    },
+    {
+      "inf": "beschließen",
+      "pres": "er beschließt",
+      "pret": "er beschloss",
+      "parf": "er hat beschlossen",
+      "sens": "décider"
+    },
+    {
+      "inf": "beschreiben",
+      "pres": "er beschreibt",
+      "pret": "er beschrieb",
+      "parf": "er hat beschrieben",
+      "sens": "décrire"
+    },
+    {
+      "inf": "bleiben",
+      "pres": "er bleibt",
+      "pret": "er blieb",
+      "parf": "er ist geblieben",
+      "sens": "rester"
+    },
+    {
+      "inf": "brechen",
+      "pres": "er bricht",
+      "pret": "er brach",
+      "parf": "er hat gebrochen",
+      "sens": "casser"
+    },
+    {
+      "inf": "bringen",
+      "pres": "er bringt",
+      "pret": "er brachte",
+      "parf": "er hat gebracht",
+      "sens": "apporter"
+    },
+    {
+      "inf": "denken",
+      "pres": "er denkt",
+      "pret": "er dachte",
+      "parf": "er hat gedacht",
+      "sens": "penser"
+    },
+    {
+      "inf": "ein/laden",
+      "pres": "er lädt ein",
+      "pret": "er lud ein",
+      "parf": "er hat eingeladen",
+      "sens": "inviter"
+    },
+    {
+      "inf": "ein/schlafen",
+      "pres": "er schläft ein",
+      "pret": "er schlief ein",
+      "parf": "er ist eingeschlafen",
+      "sens": "s'endormir"
+    },
+    {
+      "inf": "empfangen",
+      "pres": "er empfängt",
+      "pret": "er empfing",
+      "parf": "er hat empfangen",
+      "sens": "recevoir"
+    },
+    {
+      "inf": "empfehlen",
+      "pres": "er empfiehlt",
+      "pret": "er empfahl",
+      "parf": "er hat empfohlen",
+      "sens": "recommander"
+    },
+    {
+      "inf": "erhalten",
+      "pres": "er erhält",
+      "pret": "er erhielt",
+      "parf": "er hat erhalten",
+      "sens": "obtenir"
+    },
+    {
+      "inf": "ertragen",
+      "pres": "er erträgt",
+      "pret": "er ertrug",
+      "parf": "er hat ertragen",
+      "sens": "supporter"
+    },
+    {
+      "inf": "essen",
+      "pres": "er isst",
+      "pret": "er aß",
+      "parf": "er hat gegessen",
+      "sens": "manger"
+    },
+    {
+      "inf": "fahren",
+      "pres": "er fährt",
+      "pret": "er fuhr",
+      "parf": "er ist gefahren",
+      "sens": "aller (en véhicule)"
+    },
+    {
+      "inf": "fallen",
+      "pres": "er fällt",
+      "pret": "er fiel",
+      "parf": "er ist gefallen",
+      "sens": "tomber"
+    },
+    {
+      "inf": "fangen",
+      "pres": "er fängt",
+      "pret": "er fing",
+      "parf": "er hat gefangen",
+      "sens": "attraper"
+    },
+    {
+      "inf": "fern/sehen",
+      "pres": "er sieht fern",
+      "pret": "er sah fern",
+      "parf": "er hat ferngesehen",
+      "sens": "regarder la télé"
+    },
+    {
+      "inf": "finden",
+      "pres": "er findet",
+      "pret": "er fand",
+      "parf": "er hat gefunden",
+      "sens": "trouver"
+    },
+    {
+      "inf": "fliegen",
+      "pres": "er fliegt",
+      "pret": "er flog",
+      "parf": "er ist geflogen",
+      "sens": "voler"
+    },
+    {
+      "inf": "fliehen",
+      "pres": "er flieht",
+      "pret": "er floh",
+      "parf": "er ist geglohen",
+      "sens": "fuir"
+    },
+    {
+      "inf": "fressen",
+      "pres": "er frisst",
+      "pret": "er fraß",
+      "parf": "er hat gefressen",
+      "sens": "manger un animal"
+    },
+    {
+      "inf": "geben",
+      "pres": "er gibt",
+      "pret": "er gab",
+      "parf": "er hat gegeben",
+      "sens": "donner"
+    },
+    {
+      "inf": "gehen",
+      "pres": "er geht",
+      "pret": "er ging",
+      "parf": "er ist gegangen",
+      "sens": "aller"
+    },
+    {
+      "inf": "gefallen",
+      "pres": "er gafällt",
+      "pret": "er gefiel",
+      "parf": "er hat gefallen",
+      "sens": "plaire"
+    },
+    {
+      "inf": "gewinnen",
+      "pres": "er gewinnt",
+      "pret": "er gewann",
+      "parf": "er hat gewonnen",
+      "sens": "gagner"
+    },
+    {
+      "inf": "halten",
+      "pres": "er hält",
+      "pret": "er hielt",
+      "parf": "er hat gehalten",
+      "sens": "tenir"
+    },
+    {
+      "inf": "helfen",
+      "pres": "er hilft",
+      "pret": "er half",
+      "parf": "er hat geholfen",
+      "sens": "aider"
+    },
+    {
+      "inf": "kennen",
+      "pres": "er kennt",
+      "pret": "er kannte",
+      "parf": "er hat gekannt",
+      "sens": "connaître"
+    },
+    {
+      "inf": "kommen",
+      "pres": "er kommt",
+      "pret": "er kam",
+      "parf": "er ist gekommen",
+      "sens": "venir"
+    },
+    {
+      "inf": "lassen",
+      "pres": "er lässt",
+      "pret": "er ließ",
+      "parf": "er hat gelassen",
+      "sens": "laisser"
+    },
+    {
+      "inf": "laufen",
+      "pres": "er läuft",
+      "pret": "er lief",
+      "parf": "er ist gelaufen",
+      "sens": "courir"
+    },
+    {
+      "inf": "leiden",
+      "pres": "er leidet",
+      "pret": "er litt",
+      "parf": "er hat gelitten",
+      "sens": "souffrir"
+    },
+    {
+      "inf": "lesen",
+      "pres": "er liest",
+      "pret": "er las",
+      "parf": "er hat gelesen",
+      "sens": "lire"
+    },
+    {
+      "inf": "mit/helfen",
+      "pres": "er hilft mit",
+      "pret": "er half mit",
+      "parf": "er hat mitgeholfen",
+      "sens": "donner un coup de main"
+    },
+    {
+      "inf": "mit/nehmen",
+      "pres": "er nimmt mit",
+      "pret": "er nahm mit",
+      "parf": "er hat mitgenommen",
+      "sens": "emporter"
+    },
+    {
+      "inf": "nehmen",
+      "pres": "er nimmt",
+      "pret": "er nahm",
+      "parf": "er hat genommen",
+      "sens": "prendre"
+    },
+    {
+      "inf": "reiten",
+      "pres": "er reitet",
+      "pret": "er ritt",
+      "parf": "er ist geritten",
+      "sens": "monter à cheval"
+    },
+    {
+      "inf": "sheinen",
+      "pres": "er sheint",
+      "pret": "er schien",
+      "parf": "er hat geschienen",
+      "sens": "sembler/briller"
+    },
+    {
+      "inf": "schlafen",
+      "pres": "er schläft",
+      "pret": "er schlief",
+      "parf": "er hat geschlafen",
+      "sens": "dormir"
+    },
+    {
+      "inf": "schließen",
+      "pres": "er schließt",
+      "pret": "er schloss",
+      "parf": "er hat geschlossen",
+      "sens": "fermer"
+    },
+    {
+      "inf": "schreiben",
+      "pres": "er schreibt",
+      "pret": "er schrieb",
+      "parf": "er hat geschrieben",
+      "sens": "écrire"
+    },
+    {
+      "inf": "schreien",
+      "pres": "er schreit",
+      "pret": "er schrie",
+      "parf": "er hat geschrien",
+      "sens": "crier"
+    },
+    {
+      "inf": "schwimmen",
+      "pres": "er schwimmt",
+      "pret": "er schwamm",
+      "parf": "er ist geschwommen",
+      "sens": "nager"
+    },
+    {
+      "inf": "sehen",
+      "pres": "er sieht",
+      "pret": "er sah",
+      "parf": "er hat gesehen",
+      "sens": "voir"
+    },
+    {
+      "inf": "sein",
+      "pres": "er ist",
+      "pret": "er war",
+      "parf": "er ist gewesen",
+      "sens": "être"
+    },
+    {
+      "inf": "singen",
+      "pres": "er singt",
+      "pret": "er sang",
+      "parf": "er hat gesungen",
+      "sens": "chanter"
+    },
+    {
+      "inf": "sitzen",
+      "pres": "er sitzt",
+      "pret": "er saß",
+      "parf": "er hat gesessen",
+      "sens": "être assis"
+    },
+    {
+      "inf": "sprechen",
+      "pres": "er spricht",
+      "pret": "er sprach",
+      "parf": "er hat gesprochen",
+      "sens": "parler"
+    },
+    {
+      "inf": "stehen",
+      "pres": "er steht",
+      "pret": "er stand",
+      "parf": "er hat gestanden",
+      "sens": "être debout"
+    },
+    {
+      "inf": "steigen",
+      "pres": "er steigt",
+      "pret": "er stieg",
+      "parf": "er ist gestiegen",
+      "sens": "monter"
+    },
+    {
+      "inf": "sterben",
+      "pres": "er stirbt",
+      "pret": "er starb",
+      "parf": "er ist gestorben",
+      "sens": "mourir"
+    },
+    {
+      "inf": "sich streiten",
+      "pres": "er streitet sich",
+      "pret": "er stritt sich",
+      "parf": "er sich gestritten",
+      "sens": "se disputer"
+    },
+    {
+      "inf": "tragen",
+      "pres": "er trägt",
+      "pret": "er trug",
+      "parf": "er hat getragen",
+      "sens": "porter"
+    },
+    {
+      "inf": "treffen",
+      "pres": "er trifft",
+      "pret": "er traf",
+      "parf": "er hat getroffen",
+      "sens": "rencontrer"
+    },
+    {
+      "inf": "treiben",
+      "pres": "er treibt",
+      "pret": "er trieb",
+      "parf": "er hat getrieben",
+      "sens": "pousser / pratiquer"
+    },
+    {
+      "inf": "trinken",
+      "pres": "er trinkt",
+      "pret": "er trank",
+      "parf": "er hat getrunken",
+      "sens": "boire"
+    },
+    {
+      "inf": "tun",
+      "pres": "er tut",
+      "pret": "er tat",
+      "parf": "er hat getan",
+      "sens": "faire"
+    },
+    {
+      "inf": "übertreiben",
+      "pres": "er übertreibt",
+      "pret": "er übertrieb",
+      "parf": "er hat übertreiben",
+      "sens": "exagérer"
+    },
+    {
+      "inf": "verbieten",
+      "pres": "er verbietet",
+      "pret": "er verbot",
+      "parf": "er hat verboten",
+      "sens": "interdire"
+    },
+    {
+      "inf": "verbringen",
+      "pres": "er verbringt",
+      "pret": "er verbrachte",
+      "parf": "er hat verbracht",
+      "sens": "passer du temps"
+    },
+    {
+      "inf": "vergessen",
+      "pres": "er vergisst",
+      "pret": "er vergaß",
+      "parf": "er hat vergessen",
+      "sens": "oublier"
+    },
+    {
+      "inf": "vergleichen",
+      "pres": "er vegleicht",
+      "pret": "er verglich",
+      "parf": "er hat verglichen",
+      "sens": "comparer"
+    },
+    {
+      "inf": "verlassen",
+      "pres": "er verlässt",
+      "pret": "er verließ",
+      "parf": "er hat verlassen",
+      "sens": "quitter, abandonner"
+    },
+    {
+      "inf": "verlieren",
+      "pres": "er verliert",
+      "pret": "er verlor",
+      "parf": "er hat verloren",
+      "sens": "perdre"
+    },
+    {
+      "inf": "versprechen",
+      "pres": "er verspricht",
+      "pret": "er versprach",
+      "parf": "er hat versprochen",
+      "sens": "promettre"
+    },
+    {
+      "inf": "verschwinden",
+      "pres": "er verschwimdet",
+      "pret": "er verschwand",
+      "parf": "er ist verschwunden",
+      "sens": "disparaître"
+    },
+    {
+      "inf": "verstehen",
+      "pres": "er versteht",
+      "pret": "er verstand",
+      "parf": "er hat verstanden",
+      "sens": "comprendre"
+    },
+    {
+      "inf": "vor/schlagen",
+      "pres": "er schlägt vor",
+      "pret": "er schlug vor",
+      "parf": "er hat vorgeschlagen",
+      "sens": "proposer"
+    },
+    {
+      "inf": "werden",
+      "pres": "er wird",
+      "pret": "er wurde",
+      "parf": "er ist geworden",
+      "sens": "devenir"
+    },
+    {
+      "inf": "werfen",
+      "pres": "er wirft",
+      "pret": "er warf",
+      "parf": "er hat geworfen",
+      "sens": "jeter"
+    },
+    {
+      "inf": "wissen",
+      "pres": "er weiß",
+      "pret": "er wusste",
+      "parf": "er hat gewusst",
+      "sens": "savoir"
+    },
+    {
+      "inf": "ziehen",
+      "pres": "er zieht",
+      "pret": "er zog",
+      "parf": "er hat gezogen",
+      "sens": "tirer"
+    },
+    {
+      "inf": "zwingen",
+      "pres": "er zwingt",
+      "pret": "er zwang",
+      "parf": "er hat gezwungen",
+      "sens": "forcer"
+    },
   { inf: "beginnen", pres: "er beginnt", pret: "er begann", parf: "er hat begonnen", sens: "commencer" },
   { inf: "bleiben", pres: "er bleibt", pret: "er blieb", parf: "er ist geblieben", sens: "rester" },
   { inf: "bringen", pres: "er bringt", pret: "er brachte", parf: "er hat gebracht", sens: "apporter" },
