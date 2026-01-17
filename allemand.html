@@ -72,6 +72,69 @@ table tr:nth-child(even) {
   animation: successFlash 0.6s ease, successPop 0.4s ease;
 }
 
+.suggestions {
+  position: absolute;
+  background: var(--card);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 10;
+}
+.suggestions div {
+  padding: 6px;
+  cursor: pointer;
+}
+
+.suggestions div:hover,
+.suggestions .active {
+  background: var(--accent);
+  color: #000;
+}
+
+:root {
+  --bg: #f4f4f4;
+  --card: #ffffff;
+  --text: #000000;
+  --input: #ffffff;
+  --border: #cccccc;
+  --accent: #4caf50;
+  --error: #ff4d4d;
+}
+
+body.dark {
+  --bg: #121212;
+  --card: #1e1e1e;
+  --text: #e0e0e0;
+  --input: #2a2a2a;
+  --border: #444;
+  --accent: #81c784;
+  --error: #ff6b6b;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.card {
+  background: var(--card);
+}
+
+input, button, select {
+  background: var(--input);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
 </style>
 </head>
 
@@ -89,6 +152,7 @@ table tr:nth-child(even) {
   <button onclick="afficherStats()">📊 Statistiques</button>
 <button id="btnActiverNotif" onclick="activerNotifications()">🔔 Activer les notifications</button>
 <button id="btnDesactiverNotif" onclick="desactiverNotifications()" class="hidden">🔕 Désactiver les notifications</button>
+<button onclick="toggleTheme()">🌙 Thème sombre</button>
 <p style="text-align:center; margin-top:10px;">
   🔥 Série actuelle : <strong id="streakMenu">0</strong> jour(s)
 </p>
@@ -143,9 +207,15 @@ table tr:nth-child(even) {
   <div id="gestionListe" class="hidden">
     <h3 id="titreListe"></h3>
 
-<label>Infinitif
-  <input id="p_inf" onblur="autoCompleterVerbe()">
+    <label>Infinitif
+  <div style="position:relative">
+    <input id="p_inf" autocomplete="off"
+           oninput="suggestionsInfinitif()"
+           onblur="fermerSuggestionsAvecDelai()">
+    <div id="suggestions" class="suggestions hidden"></div>
+  </div>
 </label>
+
 
     <label>Présent <input id="p_pres"></label>
     <label>Prétérit <input id="p_pret"></label>
@@ -2191,6 +2261,119 @@ function reviserVerbesProblemes() {
 // update streak
 document.getElementById("streakMenu").textContent =
   (JSON.parse(localStorage.getItem("streak")) || { count: 0 }).count;
+
+// ===== AUTOSUGGESTION =========
+let indexSuggestion = -1;
+let suggestionsActuelles = [];
+
+
+function suggestionsInfinitif() {
+  const input = p_inf.value.trim().toLowerCase();
+  const box = document.getElementById("suggestions");
+  box.innerHTML = "";
+  indexSuggestion = -1;
+  suggestionsActuelles = [];
+
+  if (input.length < 2) {
+    box.classList.add("hidden");
+    return;
+  }
+
+  const dict = getDictionnaireVerbes();
+  suggestionsActuelles = Object.keys(dict)
+    .filter(k => k.startsWith(input))
+    .slice(0, 8);
+
+  if (!suggestionsActuelles.length) {
+    box.classList.add("hidden");
+    return;
+  }
+
+  suggestionsActuelles.forEach((inf, i) => {
+    const div = document.createElement("div");
+    div.textContent = inf;
+    div.onclick = () => selectionnerVerbe(dict[inf]);
+    box.appendChild(div);
+  });
+
+  box.classList.remove("hidden");
+}
+
+
+function selectionnerVerbe(verbe) {
+  p_inf.value = verbe.inf;
+  p_pres.value = verbe.pres;
+  p_pret.value = verbe.pret;
+  p_parf.value = verbe.parf;
+  p_sens.value = verbe.sens;
+
+  [p_pres, p_pret, p_parf, p_sens].forEach(i => i.disabled = true);
+  document.getElementById("suggestions").classList.add("hidden");
+}
+
+function fermerSuggestionsAvecDelai() {
+  setTimeout(() => {
+    document.getElementById("suggestions").classList.add("hidden");
+    autoCompleterVerbe(); // fallback si pas cliqué
+  }, 150);
+}
+
+p_inf.addEventListener("input", () => {
+  indexSuggestion = -1;
+  [p_pres, p_pret, p_parf, p_sens].forEach(i => i.disabled = false);
+});
+
+
+
+p_inf.addEventListener("keydown", e => {
+  const box = document.getElementById("suggestions");
+  if (box.classList.contains("hidden")) return;
+
+  const items = box.children;
+  if (!items.length) return;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    indexSuggestion = (indexSuggestion + 1) % items.length;
+    majSelection(items);
+  }
+
+  if (e.key === "ArrowUp") {
+    e.preventDefault();
+    indexSuggestion = (indexSuggestion - 1 + items.length) % items.length;
+    majSelection(items);
+  }
+
+  if (e.key === "Enter" && indexSuggestion >= 0) {
+    e.preventDefault();
+    const inf = suggestionsActuelles[indexSuggestion];
+    selectionnerVerbe(getDictionnaireVerbes()[inf]);
+  }
+
+  if (e.key === "Escape") {
+    box.classList.add("hidden");
+  }
+});
+
+function majSelection(items) {
+  [...items].forEach((el, i) => {
+    el.classList.toggle("active", i === indexSuggestion);
+  });
+}
+
+// ======== THÈME SOMBRE ET CLAIR ====
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem(
+    "theme",
+    document.body.classList.contains("dark") ? "dark" : "light"
+  );
+}
+
+  if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
+
 
 </script>
 
